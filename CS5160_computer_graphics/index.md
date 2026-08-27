@@ -1,3 +1,3 @@
 # CS5160 Computer Graphics Portfolio
 
-This github repository holds work and documentation from my CS5160 Computer Graphics course at /CS5160_computer_graphics/. This is a public page to display that work.
+This is a portfolio for my CS5160 Computer Graphics course. Code files can be found in the repository at `/CS5160-computer-graphics`.
