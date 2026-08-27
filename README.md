@@ -1,5 +1,3 @@
-# Reece Whitaker
-
 ## About me
 
 INSERT PHOTO
