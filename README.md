@@ -1,6 +1,6 @@
 ## About me
 
-![headshot.JPG](/assets/headshot.JPG)
+<img src="https://github.com/ReeceW18/ReeceW18.github.io/blob/main/assets/headshot.JPG?raw=true" width="100" height="100">
 
 I'm a Computer Science student at University of Cincinnati class of 2029.
 
