@@ -1,6 +1,6 @@
 ## About me
 
-<img src="https://github.com/ReeceW18/ReeceW18.github.io/blob/main/assets/headshot.JPG?raw=true" width="1000" height="500">
+<img src="https://github.com/ReeceW18/ReeceW18.github.io/blob/main/assets/headshot.JPG?raw=true" height="500">
 
 I'm a Computer Science student at University of Cincinnati class of 2029.
 
