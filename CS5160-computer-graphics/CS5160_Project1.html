@@ -1,0 +1,1116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vaporwave Interactive Experience</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #050510;
+        color: white;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      style="
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        max-width: 550px;
+        background: rgba(0, 0, 0, 0.5);
+        font-family: Arial, sans-serif;
+      "
+    >
+      <details open style="padding: 0px 15px; padding-top: 10px">
+        <summary style="font-size: 20px">
+          Vaporwave Interactive Experience - Reece Whitaker
+        </summary>
+        <div style="">
+          <p>
+            This is a project completed in September 2026 as the first project
+            for my Graphics Programming course. Visuals were inspired by
+            vaporwave style scrolling screensavers. See [TODO: INSERT LINK] for
+            full documentation.<br /><br />
+            The project has 3 render modes: wireframe, pixel edges, and pixel
+            faces. Where wireframe uses js canvas' built in line drawing with
+            x,y generated using pinhole projection. Pixel edges and pixel faces
+            use rasterization on a simualted 320x200 pixel display. Pixel edges
+            uses a line rasterization algorithm to draw edges, while pixel faces
+            uses a triangle rasterization algorithm to draw faces. All objects
+            represented in real space and transformed into uv projection.
+          </p>
+          <b>Controls:</b> WASDQE or arrow keys, '.', ',' to move within bounds,
+          SPACE to change car color, R to reset, Z to show wireframe in faces
+          mode, 123 to change mode, F to view pixel grid.<br />
+        </div>
+      </details>
+      <div style="padding: 10px">
+        <button onclick="setMode('wireframe')">Wireframe</button>
+        <button onclick="setMode('rasterEdges')">Pixel Edges</button>
+        <button onclick="setMode('rasterFaces')">Pixel Faces</button>
+      </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+  </body>
+
+  <script>
+    // General TODOS
+    // - abstract colors to single location
+
+    // What would be ideal clean ups to be perfect, but ignoring
+    // - use {x,y,z} everywhere instead of mixing with {u,v,z}
+    // - clean up space expectations, e.g. drawLine expects screen space while drawTri expects model space + object info
+    // - pixelGrid management, in some places instance new object when changing a pixel while in others just change value of the pixel already there. make consistent
+    //   - initilization actually currently fills the rows in a column with same instance
+    // - unify camera info into a single object (position, limits, clipstart, fov)
+    //
+    // other potential features
+    // - draw all edges as faces in face mode
+    //   - drawEdge function
+    // - render faces on floor
+
+    // GLOBAL VARS
+
+    // canvas setup
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const PALETTE = {
+      bg: "#050530",
+      sun: "orange",
+      mountains: "gray",
+      ground: "orchid",
+      roadLines: "yellow",
+      lights: "yellow",
+      signs: "green",
+      obstacles: "red",
+      default: "white",
+    };
+
+    const rows = 200;
+    const cols = 320;
+    const pixelGrid = Array.from({ length: cols }, () =>
+      Array(rows).fill({ color: PALETTE.bg, depth: Infinity }),
+    );
+    let seePixelGrid = false;
+    let showFacesWireframe = false;
+
+    // for keyboard controls
+    const keys = {};
+
+    let horizon = { z: 5000 };
+
+    const defaultCarPosition = Object.freeze({ x: 0, y: 1, z: 10 });
+    const defaultCameraPosition = Object.freeze({ x: 0, y: 10, z: -25 });
+
+    let carColors = [
+      "blue",
+      "red",
+      "green",
+      "yellow",
+      "orange",
+      "purple",
+      "pink",
+      "brown",
+      "gray",
+    ];
+    let colorIndex = 0;
+
+    // wireframe, rasterEdges, rasterFaces
+    let mode = localStorage.getItem("mode") || "wireframe";
+
+    // for html buttons
+    // input modes: wireframe, rasterEdges, rasterFaces
+    function setMode(newMode) {
+      mode = newMode;
+      localStorage.setItem("mode", newMode);
+    }
+
+    // represents imagined z position, camera.z never actually changes
+    let relativeOffset = 0;
+    let linesInterval = 50; // floor grid size
+
+    let roadWidth = 20;
+    let roadLineInterval = 30;
+    let roadLineLength = 5;
+
+    let meshInterval = 100; // for repeating meshes along road
+    let meshLimit = 5000;
+    let numLightMeshes = meshLimit / meshInterval;
+
+    let camera = { ...defaultCameraPosition };
+    let camLimits = {
+      miny: 1,
+      maxy: 15,
+    };
+    let clipStart = 0.5;
+    let fov = 1.5;
+
+    let speed = 100;
+
+    let scales = [];
+    for (let i = 0; i < numLightMeshes; i++) {
+      scales.push(randomRange(0.8, 1.2));
+    }
+
+    // MESHES
+
+    // MESHES
+
+    let carMesh = {
+      vertices: [
+        // --- Lower Chassis (0 - 7) ---
+        { x: -1.0, y: -0.4, z: -3.2 }, // 0: rear-left-bot
+        { x: -1.0, y: 0.2, z: -3.2 }, // 1: rear-left-top
+        { x: -1.0, y: -0.4, z: 3.2 }, // 2: front-left-bot
+        { x: -1.0, y: 0.2, z: 3.2 }, // 3: front-left-top
+        { x: 1.0, y: -0.4, z: -3.2 }, // 4: rear-right-bot
+        { x: 1.0, y: 0.2, z: -3.2 }, // 5: rear-right-top
+        { x: 1.0, y: -0.4, z: 3.2 }, // 6: front-right-bot
+        { x: 1.0, y: 0.2, z: 3.2 }, // 7: front-right-top
+
+        // --- Cabin / Greenhouse (8 - 15) ---
+        { x: -0.75, y: 0.2, z: -1.2 }, // 8:  cabin-rear-left-bot
+        { x: 0.75, y: 0.2, z: -1.2 }, // 9:  cabin-rear-right-bot
+        { x: -0.75, y: 0.9, z: -0.5 }, // 10: roof-rear-left
+        { x: 0.75, y: 0.9, z: -0.5 }, // 11: roof-rear-right
+        { x: -0.75, y: 0.9, z: 0.7 }, // 12: roof-front-left
+        { x: 0.75, y: 0.9, z: 0.7 }, // 13: roof-front-right
+        { x: -0.75, y: 0.2, z: 1.4 }, // 14: cabin-front-left-bot
+        { x: 0.75, y: 0.2, z: 1.4 }, // 15: cabin-front-right-bot
+
+        // --- Rear-Left Wheel (16 - 23) ---
+        { x: -1.25, y: -1.0, z: -2.5 }, // 16: back-bot-out
+        { x: -0.95, y: -1.0, z: -2.5 }, // 17: back-bot-in
+        { x: -0.95, y: -0.2, z: -2.5 }, // 18: back-top-in
+        { x: -1.25, y: -0.2, z: -2.5 }, // 19: back-top-out
+        { x: -1.25, y: -1.0, z: -1.5 }, // 20: front-bot-out
+        { x: -0.95, y: -1.0, z: -1.5 }, // 21: front-bot-in
+        { x: -0.95, y: -0.2, z: -1.5 }, // 22: front-top-in
+        { x: -1.25, y: -0.2, z: -1.5 }, // 23: front-top-out
+
+        // --- Rear-Right Wheel (24 - 31) ---
+        { x: 0.95, y: -1.0, z: -2.5 }, // 24: back-bot-in
+        { x: 1.25, y: -1.0, z: -2.5 }, // 25: back-bot-out
+        { x: 1.25, y: -0.2, z: -2.5 }, // 26: back-top-out
+        { x: 0.95, y: -0.2, z: -2.5 }, // 27: back-top-in
+        { x: 0.95, y: -1.0, z: -1.5 }, // 28: front-bot-in
+        { x: 1.25, y: -1.0, z: -1.5 }, // 29: front-bot-out
+        { x: 1.25, y: -0.2, z: -1.5 }, // 30: front-top-out
+        { x: 0.95, y: -0.2, z: -1.5 }, // 31: front-top-in
+
+        // --- Front-Left Wheel (32 - 39) ---
+        { x: -1.25, y: -1.0, z: 1.5 }, // 32
+        { x: -0.95, y: -1.0, z: 1.5 }, // 33
+        { x: -0.95, y: -0.2, z: 1.5 }, // 34
+        { x: -1.25, y: -0.2, z: 1.5 }, // 35
+        { x: -1.25, y: -1.0, z: 2.5 }, // 36
+        { x: -0.95, y: -1.0, z: 2.5 }, // 37
+        { x: -0.95, y: -0.2, z: 2.5 }, // 38
+        { x: -1.25, y: -0.2, z: 2.5 }, // 39
+
+        // --- Front-Right Wheel (40 - 47) ---
+        { x: 0.95, y: -1.0, z: 1.5 }, // 40
+        { x: 1.25, y: -1.0, z: 1.5 }, // 41
+        { x: 1.25, y: -0.2, z: 1.5 }, // 42
+        { x: 0.95, y: -0.2, z: 1.5 }, // 43
+        { x: 0.95, y: -1.0, z: 2.5 }, // 44
+        { x: 1.25, y: -1.0, z: 2.5 }, // 45
+        { x: 1.25, y: -0.2, z: 2.5 }, // 46
+        { x: 0.95, y: -0.2, z: 2.5 }, // 47
+      ],
+      faces: [
+        // Chassis Panels
+        [0, 4, 5, 1], // Rear bumper
+        [6, 2, 3, 7], // Front bumper
+        [0, 1, 3, 2], // Left lower side
+        [4, 6, 7, 5], // Right lower side
+        [0, 2, 6, 4], // Underside (ground clearance)
+        [1, 5, 7, 3], // Body deck (trunk & hood)
+
+        // Cabin Panels
+        [8, 9, 11, 10], // Rear window (sloped)
+        [10, 11, 13, 12], // Roof
+        [12, 13, 15, 14], // Windshield (sloped)
+        [8, 10, 12, 14], // Left side window
+        [9, 15, 13, 11], // Right side window
+
+        // Rear-Left Wheel
+        [16, 17, 18, 19],
+        [20, 23, 22, 21],
+        [16, 20, 21, 17],
+        [19, 18, 22, 23],
+        [16, 19, 23, 20],
+        [17, 21, 22, 18],
+
+        // Rear-Right Wheel
+        [24, 25, 26, 27],
+        [28, 31, 30, 29],
+        [24, 28, 29, 25],
+        [27, 26, 30, 31],
+        [24, 27, 31, 28],
+        [25, 29, 30, 26],
+
+        // Front-Left Wheel
+        [32, 33, 34, 35],
+        [36, 39, 38, 37],
+        [32, 36, 37, 33],
+        [35, 34, 38, 39],
+        [32, 35, 39, 36],
+        [33, 37, 38, 34],
+
+        // Front-Right Wheel
+        [40, 41, 42, 43],
+        [44, 47, 46, 45],
+        [40, 44, 45, 41],
+        [43, 42, 46, 47],
+        [40, 43, 47, 44],
+        [41, 45, 46, 42],
+      ],
+    };
+
+    let cylinderMesh = {
+      vertices: [
+        // Top circle (y = 1)
+        { x: 1, y: 1, z: 0 }, // 0
+        { x: 0.71, y: 1, z: 0.71 }, // 1
+        { x: 0, y: 1, z: 1 }, // 2
+        { x: -0.71, y: 1, z: 0.71 }, // 3
+        { x: -1, y: 1, z: 0 }, // 4
+        { x: -0.71, y: 1, z: -0.71 }, // 5
+        { x: 0, y: 1, z: -1 }, // 6
+        { x: 0.71, y: 1, z: -0.71 }, // 7
+
+        // Bottom circle (y = -1)
+        { x: 1, y: -1, z: 0 }, // 8
+        { x: 0.71, y: -1, z: 0.71 }, // 9
+        { x: 0, y: -1, z: 1 }, // 10
+        { x: -0.71, y: -1, z: 0.71 }, // 11
+        { x: -1, y: -1, z: 0 }, // 12
+        { x: -0.71, y: -1, z: -0.71 }, // 13
+        { x: 0, y: -1, z: -1 }, // 14
+        { x: 0.71, y: -1, z: -0.71 }, // 15
+
+        // Centers
+        { x: 0, y: 1, z: 0 }, // 16: Top Center
+        { x: 0, y: -1, z: 0 }, // 17: Bottom Center
+      ],
+      faces: [
+        // 8 Side Quads
+        [0, 1, 9, 8],
+        [1, 2, 10, 9],
+        [2, 3, 11, 10],
+        [3, 4, 12, 11],
+        [4, 5, 13, 12],
+        [5, 6, 14, 13],
+        [6, 7, 15, 14],
+        [7, 0, 8, 15],
+
+        // Top Cap (Fan from center 16)
+        [16, 0, 1],
+        [16, 1, 2],
+        [16, 2, 3],
+        [16, 3, 4],
+        [16, 4, 5],
+        [16, 5, 6],
+        [16, 6, 7],
+        [16, 7, 0],
+
+        // Bottom Cap (Fan from center 17)
+        [17, 9, 8],
+        [17, 10, 9],
+        [17, 11, 10],
+        [17, 12, 11],
+        [17, 13, 12],
+        [17, 14, 13],
+        [17, 15, 14],
+        [17, 8, 15],
+      ],
+    };
+
+    let cubeMesh = {
+      vertices: [
+        { x: -1, y: -1, z: 1 }, // A, idx 0
+        { x: -1, y: 1, z: 1 }, // B, idx 1
+        { x: -1, y: -1, z: -1 }, // C, idx 2
+        { x: -1, y: 1, z: -1 }, // D, idx 3
+        { x: 1, y: -1, z: 1 }, // E, idx 4
+        { x: 1, y: 1, z: 1 }, // F, idx 5
+        { x: 1, y: -1, z: -1 }, // G, idx 6
+        { x: 1, y: 1, z: -1 }, // H, idx 7
+      ],
+      faces: [
+        [0, 1, 3, 2],
+        [2, 3, 7, 6],
+        [6, 7, 5, 4],
+        [4, 5, 1, 0],
+        [2, 6, 4, 0],
+        [7, 3, 1, 5],
+      ],
+    };
+
+    let signMesh = {
+      vertices: [
+        { x: 0, y: 0, z: 0 }, //origin
+        { x: 0, y: 12, z: 0 }, //
+        { x: -4, y: 12, z: 0 },
+        { x: -6, y: 12, z: 0 },
+        { x: -4, y: 10, z: 0 },
+        { x: -6, y: 10, z: 0 },
+        { x: -8, y: 12, z: 0 },
+        { x: -8, y: 10, z: 0 },
+        { x: -2, y: 10, z: 0 },
+        { x: -8, y: 7, z: 0 },
+        { x: -2, y: 7, z: 0 },
+      ],
+      faces: [
+        [0, 1],
+        [1, 6],
+        [2, 4],
+        [3, 5],
+        [7, 8, 10, 9],
+      ],
+    };
+
+    let lightMesh = {
+      vertices: [
+        { x: 0, y: 0, z: 0 }, //origin
+        { x: 0, y: 8, z: 0 }, //
+        { x: 6, y: 8, z: 0 },
+        { x: 6, y: 7, z: 0 },
+        { x: 4, y: 7, z: 0 },
+        { x: 4, y: 8, z: 0 },
+      ],
+      faces: [
+        [0, 1],
+        [1, 2],
+        [2, 3, 4, 5],
+      ],
+    };
+
+    let sunMesh = {
+      vertices: [
+        { x: 0, y: 0, z: 0 }, // 1: Origin / Center
+        { x: 1, y: 0, z: 0 }, // 2: 0°
+        { x: 0.87, y: 0.5, z: 0 }, // 3: 30°
+        { x: 0.5, y: 0.87, z: 0 }, // 4: 60°
+        { x: 0, y: 1, z: 0 }, // 5: 90°
+        { x: -0.5, y: 0.87, z: 0 }, // 6: 120°
+        { x: -0.87, y: 0.5, z: 0 }, // 7: 150°
+        { x: -1, y: 0, z: 0 }, // 8: 180°
+        { x: -0.87, y: -0.5, z: 0 }, // 9: 210°
+        { x: -0.5, y: -0.87, z: 0 }, // 10: 240°
+        { x: 0, y: -1, z: 0 }, // 11: 270°
+        { x: 0.5, y: -0.87, z: 0 }, // 12: 300°
+        { x: 0.87, y: -0.5, z: 0 }, // 13: 330°
+      ],
+      faces: [
+        [0, 1, 2],
+        [0, 2, 3],
+        [0, 3, 4],
+        [0, 4, 5],
+        [0, 5, 6],
+        [0, 6, 7],
+        [0, 7, 8],
+        [0, 8, 9],
+        [0, 9, 10],
+        [0, 10, 11],
+        [0, 11, 12],
+        [0, 12, 1], // Closes back to vertex 2
+      ],
+    };
+
+    // INSTANCES
+
+    let mountains = [];
+    for (let x = -7500; x < 7500; x += randomRange(1000, 2000)) {
+      if (Math.abs(x) < 700) continue;
+
+      let xScale = randomRange(0.5, 1);
+      let yScale = randomRange(1000, 3000);
+      let z = horizon.z + 10;
+
+      let tri = [
+        { x: -xScale, y: 0, z: 0 },
+        { x: xScale, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 },
+      ];
+
+      let mountain = {
+        mesh: {
+          vertices: tri,
+          faces: [[0, 1, 2]],
+        },
+        position: { x: x, y: 0, z: z },
+        scale: yScale,
+        color: PALETTE.mountains,
+      };
+      mountains.push(mountain);
+    }
+
+    // define objects with mesh (vertices, faces), position, scale, color
+    // signs and lights are procedurally instanced
+    let car = {
+      mesh: carMesh,
+      position: { ...defaultCarPosition },
+      scale: 1,
+      color: carColors[0],
+    };
+    let sun = {
+      mesh: sunMesh,
+      position: { x: 0, y: 2500, z: horizon.z + 100 },
+      scale: 1000,
+      color: PALETTE.sun,
+    };
+
+    // visual representation of the movement bounds, currently unused because removed z bounds
+    let bounds = {
+      mesh: {
+        vertices: [
+          { x: -roadWidth / 2, y: 0, z: 0 },
+          { x: roadWidth / 2, y: 0, z: 0 },
+          { x: roadWidth / 2, y: 0, z: roadWidth },
+          { x: -roadWidth / 2, y: 0, z: roadWidth },
+        ],
+        faces: [[0, 1, 2, 3]],
+      },
+      position: { x: 0, y: 0, z: 0 },
+      scale: 1,
+      color: PALETTE.default,
+    };
+
+    // FUNCTIONS
+    // HELPER FUNCTIONS
+
+    function randomRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // input: 2d {u, v} verts , in correct winding order
+    function signedArea2DTri(p1, p2, p3) {
+      return (
+        ((p2.u - p1.u) * (p3.v - p1.v) - (p3.u - p1.u) * (p2.v - p1.v)) / 2
+      );
+    }
+
+    // Creates a quad from two edge vertices by offsetting edge by the normal vector
+    // of the plane made by view vector and edge vector
+    // input: {x, y, z} verts in world space
+    // output: [vert1, vert2, vert3, vert4], where verts are {x,y,z}
+    function createQuadFromEdge(vert1, vert2) {
+      // calculate normal vector of the plane made by view vector and edge vector
+      let edge = {
+        x: vert2.x - vert1.x,
+        y: vert2.y - vert1.y,
+        z: vert2.z - vert1.z,
+      };
+      let view = { x: 0, y: 0, z: 1 };
+      let normal = {
+        x: edge.y * view.z - edge.z * view.y,
+        y: edge.z * view.x - edge.x * view.z,
+        z: edge.x * view.y - edge.y * view.x,
+      };
+      let normalized = {
+        x:
+          normal.x /
+          Math.sqrt(
+            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
+          ),
+        y:
+          normal.y /
+          Math.sqrt(
+            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
+          ),
+        z:
+          normal.z /
+          Math.sqrt(
+            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
+          ),
+      };
+
+      // offset verts along normal
+      let width = 1.0; // extremely wide because thin lines don't draw at distance
+      let newvert1 = {
+        x: vert1.x - (normalized.x * width) / 2,
+        y: vert1.y - (normalized.y * width) / 2,
+        z: vert1.z - (normalized.z * width) / 2,
+      };
+      let newvert2 = {
+        x: vert2.x - (normalized.x * width) / 2,
+        y: vert2.y - (normalized.y * width) / 2,
+        z: vert2.z - (normalized.z * width) / 2,
+      };
+      let newvert3 = {
+        x: vert1.x + (normalized.x * width) / 2,
+        y: vert1.y + (normalized.y * width) / 2,
+        z: vert1.z + (normalized.z * width) / 2,
+      };
+      let newvert4 = {
+        x: vert2.x + (normalized.x * width) / 2,
+        y: vert2.y + (normalized.y * width) / 2,
+        z: vert2.z + (normalized.z * width) / 2,
+      };
+      return [newvert1, newvert2, newvert4, newvert3];
+    }
+
+    // TRANSFORMATIONS
+
+    // inputs: takes mesh vertices, and object position/scale
+    // returns: screen space {u,v,z} for a given mesh vertex
+    // that is: the pixel coordinates on the canvas in wireframe mode and the
+    // simulated pixel coordinate in raster mode, plus depth
+    // NOTE: grabs camera and its properties from globals
+    function getUV(
+      vert,
+      object = { position: { x: 0, y: 0, z: 0 }, scale: 1 },
+    ) {
+      let camVert = getCameraRelativeCoords(
+        vert,
+        object.scale,
+        object.position,
+        camera,
+      );
+
+      if (camVert.z <= clipStart) return null;
+
+      // get pinhole projection uv coordinates
+      let u = camVert.x / camVert.z;
+      let v = camVert.y / camVert.z;
+
+      // get and return screen-space coordinates
+      let screenUV = getScreenUV(u, v, camVert.z);
+      return screenUV;
+    }
+
+    // coords = {x, y, z}, returns {x,y,z}
+    function getCameraRelativeCoords(coords, scale, position, camera) {
+      return {
+        x: coords.x * scale + position.x - camera.x,
+        y: coords.y * scale + position.y - camera.y,
+        z: coords.z * scale + position.z - camera.z,
+      };
+    }
+
+    // returns {u, v, z}
+    function getScreenUV(u, v, z) {
+      let height =
+        mode === "rasterEdges" || mode === "rasterFaces" ? rows : canvas.height;
+      let width =
+        mode === "rasterEdges" || mode === "rasterFaces" ? cols : canvas.width;
+
+      u = (u * height) / fov + width / 2;
+      v = (v * height) / fov + height / 2;
+      v = height - v;
+
+      return { u, v, z };
+    }
+
+    // DRAWING
+
+    // main draw loop
+    function draw() {
+      ctx.fillStyle = PALETTE.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          pixelGrid[i][j].color = PALETTE.bg;
+          pixelGrid[i][j].depth = Infinity;
+        }
+      }
+
+      drawVerticalLines();
+      drawHorizontalLines();
+      drawRoadLines();
+      //drawObject(bounds);
+      drawRepeatingMeshes();
+      drawMountains();
+      drawObject(sun);
+      drawObject(car);
+
+      // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
+      if (mode === "rasterEdges" || mode === "rasterFaces") {
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < rows; j++) {
+            ctx.fillStyle = pixelGrid[i][j].color;
+            // drawing rect is expensive so only draw non-background pixels
+            if (ctx.fillStyle != PALETTE.bg) {
+              ctx.fillRect(i * 5, j * 5, 5, 5);
+            }
+
+            ctx.strokeStyle = "grey";
+            if (seePixelGrid) {
+              ctx.strokeRect(i * 5, j * 5, 5, 5);
+            }
+          }
+        }
+      }
+    }
+
+    function drawVerticalLines() {
+      // simultaneously draws lines to left and right out from center
+      for (
+        let i = roadWidth / 2;
+        i < roadWidth / 2 + 50 * linesInterval;
+        i += linesInterval
+      ) {
+        //  uv4 | | uv2
+        // uv3       uv1
+        let uv1 = getUV({ x: i, y: 0, z: camera.z + clipStart + 0.1 });
+        let uv2 = getUV({ x: i, y: 0, z: horizon.z });
+        let uv3 = getUV({ x: -i, y: 0, z: camera.z + clipStart + 0.1 });
+        let uv4 = getUV({ x: -i, y: 0, z: horizon.z });
+        if (uv1 === null || uv2 === null || uv3 === null || uv4 === null) break;
+        drawLine(uv1, uv2, PALETTE.ground);
+        drawLine(uv3, uv4, PALETTE.ground);
+        if (uv2.u > (mode === "wireframe" ? canvas.width : cols) - 100) break;
+      }
+    }
+
+    function drawHorizontalLines() {
+      const rightEdge = mode === "wireframe" ? canvas.width : cols;
+
+      // draw horizon line
+      let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: horizon.z });
+      let uv2 = getUV({ x: roadWidth / 2, y: 0, z: horizon.z });
+
+      // if any uv null (behind clip start), skip
+      if (uv1 === null || uv2 === null) return;
+
+      uv1.u = 0;
+      uv2.u = rightEdge;
+
+      drawLine(uv1, uv2, PALETTE.ground);
+
+      // draw horizontal lines, gap in middle for road
+      for (
+        let i = horizon.z - ((relativeOffset + camera.z) % linesInterval);
+        i > camera.z;
+        i -= linesInterval
+      ) {
+        // get road edges
+        let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: i });
+        let uv2 = getUV({ x: roadWidth / 2, y: 0, z: i });
+
+        // if any uv null (behind clip start), skip
+        if (uv1 === null || uv2 === null) continue;
+
+        // draw line from screen edges to road edges
+        drawLine({ ...uv1, u: 0 }, uv1, PALETTE.ground);
+        drawLine(uv2, { ...uv2, u: rightEdge }, PALETTE.ground);
+      }
+    }
+
+    function drawRoadLines() {
+      for (
+        let i = horizon.z - ((relativeOffset + camera.z) % roadLineInterval);
+        i - roadLineLength > camera.z + clipStart;
+        i -= roadLineInterval
+      ) {
+        // keep line bottom within clip start
+        let lineBottomZ = i - roadLineLength;
+        if (lineBottomZ < camera.z + clipStart)
+          lineBottomZ = camera.z + clipStart + 0.1;
+
+        let uv1 = getUV({ x: 0, y: 0, z: i });
+        let uv2 = getUV({ x: 0, y: 0, z: lineBottomZ });
+
+        drawLine(uv1, uv2, PALETTE.roadLines);
+      }
+    }
+
+    // draw repeating light and sign meshes along the road
+    function drawRepeatingMeshes() {
+      for (let i = 0; i < numLightMeshes; i++) {
+        let rawZ = i * meshInterval - ((relativeOffset + camera.z) % meshLimit);
+        let meshWorldZ = rawZ;
+
+        // wrap mesh world z
+        if (meshWorldZ < camera.z) {
+          meshWorldZ += meshLimit;
+        }
+
+        let scale = scales[i % scales.length];
+
+        let instance = {
+          mesh: lightMesh,
+          position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
+          scale: scale,
+          color: PALETTE.lights,
+        };
+
+        let cubeX =
+          -roadWidth / 4 + ((Math.floor(scale * 100) % 2) * roadWidth) / 2;
+        let cubeZ = meshWorldZ + ((scale * 100) % 20);
+        let normalizedRandom = (scale - 0.8) / (1.2 - 0.8);
+        let cubeScale = normalizedRandom * (4 - 0.5) + 0.5;
+
+        let cube = {
+          mesh: Math.floor(scale * 1000) % 2 === 0 ? cubeMesh : cylinderMesh,
+          position: {
+            x: cubeX,
+            y: cubeScale / 2,
+            z: cubeZ,
+          },
+          scale: cubeScale,
+          color: PALETTE.obstacles,
+        };
+
+        drawObject(cube);
+        drawObject(instance);
+      }
+      for (
+        let i =
+          meshLimit -
+          ((relativeOffset + camera.z) % (meshInterval * 4)) -
+          meshInterval / 2;
+        i > camera.z;
+        i -= meshInterval * 4
+      ) {
+        let instance = {
+          mesh: signMesh,
+          position: { x: roadWidth / 2, y: 0, z: i },
+          scale: 1,
+          color: PALETTE.signs,
+        };
+        drawObject(instance);
+      }
+    }
+
+    function drawMountains() {
+      for (let i = 0; i < mountains.length; i++) {
+        drawObject(mountains[i]);
+      }
+    }
+
+    function drawObject(object) {
+      for (let f = 0; f < object.mesh.faces.length; f++) {
+        let face = object.mesh.faces[f];
+
+        if (mode === "wireframe" || mode === "rasterEdges") {
+          for (let v = 0; v < face.length; v++) {
+            let vert1 = object.mesh.vertices[face[v]];
+            let vert2 = object.mesh.vertices[face[(v + 1) % face.length]];
+            let uv1 = getUV(vert1, object);
+            let uv2 = getUV(vert2, object);
+
+            // if uv1 or uv2 are null (behind the camera), skip the line
+            if (uv1 === null || uv2 === null) {
+              continue;
+            }
+
+            drawLine(uv1, uv2, object.color);
+          }
+        }
+
+        if (mode === "rasterFaces") {
+          if (face.length === 2) {
+            //edge
+            let quad = createQuadFromEdge(
+              object.mesh.vertices[face[0]],
+              object.mesh.vertices[face[1]],
+            );
+            drawQuad(quad, object);
+          }
+          if (face.length === 3) {
+            //tri
+            let vert1 = object.mesh.vertices[face[0]];
+            let vert2 = object.mesh.vertices[face[1]];
+            let vert3 = object.mesh.vertices[face[2]];
+            drawTri([vert1, vert2, vert3], object);
+          }
+          if (face.length === 4) {
+            //quad
+            let vert1 = object.mesh.vertices[face[0]];
+            let vert2 = object.mesh.vertices[face[1]];
+            let vert3 = object.mesh.vertices[face[2]];
+            let vert4 = object.mesh.vertices[face[3]];
+            drawQuad([vert1, vert2, vert3, vert4], object);
+          }
+        }
+      }
+    }
+
+    // splits quad into two triangles and draws them
+    function drawQuad(
+      quad,
+      object = {
+        color: PALETTE.default,
+        position: { x: 0, y: 0, z: 0 },
+        scale: 1,
+      },
+    ) {
+      // quad must be passed in winding order
+      let vert1 = quad[0];
+      let vert2 = quad[1];
+      let vert3 = quad[2];
+      let vert4 = quad[3];
+      drawTri([vert1, vert2, vert3], object);
+      drawTri([vert1, vert3, vert4], object);
+    }
+
+    // draws a single triangle using signed area
+    // tri must be passed in winding order, object only needs color, position, and scale
+    function drawTri(
+      tri,
+      object = {
+        color: PALETTE.default,
+        position: { x: 0, y: 0, z: 0 },
+        scale: 1,
+      },
+    ) {
+      // get camera uv of tri verts
+      let vert1 = getUV(tri[0], object);
+      let vert2 = getUV(tri[1], object);
+      let vert3 = getUV(tri[2], object);
+
+      // if any vert null (behind clip start), skip
+      if (vert1 === null || vert2 === null || vert3 === null) return;
+
+      if (showFacesWireframe) {
+        drawLine(
+          { ...vert1, z: vert1.z - 0.5 },
+          { ...vert2, z: vert2.z - 0.5 },
+          PALETTE.default,
+        );
+        drawLine(
+          { ...vert2, z: vert2.z - 0.5 },
+          { ...vert3, z: vert3.z - 0.5 },
+          PALETTE.default,
+        );
+        drawLine(
+          { ...vert3, z: vert3.z - 0.5 },
+          { ...vert1, z: vert1.z - 0.5 },
+          PALETTE.default,
+        );
+      }
+      // get bounds and skip if outside camera view
+      // NOTE: should really round to nearest pixel, but causes sub-pixel triangles to not render
+      // which looks particularly bad given the signs/lights with thin lines so leaving as is
+      // since it guarantees at least one pixel will be drawn
+      let minU = Math.max(0, Math.floor(Math.min(vert1.u, vert2.u, vert3.u)));
+      let maxU = Math.min(
+        cols - 1,
+        Math.floor(Math.max(vert1.u, vert2.u, vert3.u)),
+      );
+
+      let minV = Math.max(0, Math.floor(Math.min(vert1.v, vert2.v, vert3.v)));
+      let maxV = Math.min(
+        rows - 1,
+        Math.floor(Math.max(vert1.v, vert2.v, vert3.v)),
+      );
+
+      // get total area of tri
+      let totalArea = signedArea2DTri(vert1, vert2, vert3);
+
+      if (Math.abs(totalArea) < 1e-5) return;
+
+      // check if each pixel in tri and draw if is
+      for (let v = minV; v <= maxV; v++) {
+        for (let u = minU; u <= maxU; u++) {
+          // get barycentric weights
+          let w1 = signedArea2DTri({ u: u, v: v }, vert2, vert3) / totalArea;
+          let w2 = signedArea2DTri(vert1, { u: u, v: v }, vert3) / totalArea;
+          let w3 = signedArea2DTri(vert1, vert2, { u: u, v: v }) / totalArea;
+
+          // check if pixel is inside tri and draw if so
+          if (
+            (w1 >= 0 && w2 >= 0 && w3 >= 0) ||
+            (w1 <= 0 && w2 <= 0 && w3 <= 0)
+          ) {
+            // since barycentric weights are in screen space, must use inverted depth to compensate
+            // and reflect real 3d depth
+            let depth =
+              1 /
+              ((w1 * 1) / vert1.z + (w2 * 1) / vert2.z + (w3 * 1) / vert3.z);
+            setPixel(u, v, object.color, depth);
+          }
+        }
+      }
+    }
+
+    // set pixel color and depth
+    function setPixel(u, v, color, depth) {
+      let u0 = Math.floor(u);
+      let v0 = Math.floor(v);
+      if (u0 >= 0 && u0 < cols && v0 >= 0 && v0 < rows) {
+        if (depth < pixelGrid[u0][v0].depth) {
+          pixelGrid[u0][v0] = { color: color, depth: depth };
+        }
+      }
+    }
+
+    // draws line using canvas strokes if wireframe, or manual raster lines if raster mode
+    // input verts {u,v} (include z in raster modes), {u,v} in screen space
+    function drawLine(p1, p2, color = PALETTE.default) {
+      if (mode === "wireframe") {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.u, p1.v);
+        ctx.lineTo(p2.u, p2.v);
+        ctx.stroke();
+      }
+      if (mode === "rasterEdges" || mode === "rasterFaces") {
+        let dx = p2.u - p1.u;
+        let dy = p2.v - p1.v;
+        let steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+        if (steps === 0) {
+          setPixel(
+            Math.round(p1.u),
+            Math.round(p1.v),
+            color,
+            Math.min(p1.z, p2.z),
+          );
+          return;
+        }
+
+        let xStep = dx / steps;
+        let yStep = dy / steps;
+        let x = p1.u;
+        let y = p1.v;
+
+        for (let i = 0; i <= steps; i++) {
+          // must use inverted depth to compensate for barycentric weights being in screen space
+          let depth = 1 / (((1 / p1.z) * (steps - i) + (1 / p2.z) * i) / steps);
+          setPixel(Math.round(x), Math.round(y), color, depth);
+          x += xStep;
+          y += yStep;
+        }
+      }
+    }
+
+    // updates world state
+    function update(dt) {
+      relativeOffset = relativeOffset + speed * dt;
+
+      const acceleration = 7;
+      const moveSpeed = 50 * dt;
+
+      if (keys["ArrowUp"] || keys["w"]) {
+        speed = Math.min(speed + acceleration, 500);
+      }
+      if (keys["ArrowDown"] || keys["s"]) {
+        speed = Math.max(speed - acceleration, 0);
+      }
+      if (keys["ArrowLeft"] || keys["a"]) {
+        camera.x = Math.max(
+          camera.x - 0.005 * moveSpeed * speed,
+          -roadWidth / 2 + 2,
+        );
+        car.position.x = Math.max(
+          car.position.x - 0.005 * moveSpeed * speed,
+          -roadWidth / 2 + 2,
+        );
+      }
+      if (keys["ArrowRight"] || keys["d"]) {
+        camera.x = Math.min(
+          camera.x + 0.005 * moveSpeed * speed,
+          roadWidth / 2 - 2,
+        );
+        car.position.x = Math.min(
+          car.position.x + 0.005 * moveSpeed * speed,
+          roadWidth / 2 - 2,
+        );
+      }
+      if (keys["q"] || keys[","]) {
+        camera.y = Math.max(camera.y - moveSpeed, camLimits.miny);
+      }
+      if (keys["e"] || keys["."]) {
+        camera.y = Math.min(camera.y + moveSpeed, camLimits.maxy);
+      }
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (
+        [
+          "w",
+          "a",
+          "s",
+          "d",
+          "q",
+          "e",
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          " ",
+          ",",
+          ".",
+        ].includes(event.key)
+      ) {
+        event.preventDefault();
+      }
+
+      keys[event.key] = true;
+
+      if (event.key === "r") {
+        camera = { ...defaultCameraPosition };
+        car.position = { ...defaultCarPosition };
+        speed = 100;
+        relativeOffset = 0;
+        colorIndex = 0;
+        car.color = carColors[colorIndex];
+      }
+      if (event.key === "1") {
+        mode = "wireframe";
+        localStorage.setItem("mode", "wireframe");
+      }
+      if (event.key === "2") {
+        mode = "rasterEdges";
+        localStorage.setItem("mode", "rasterEdges");
+      }
+      if (event.key === "3") {
+        mode = "rasterFaces";
+        localStorage.setItem("mode", "rasterFaces");
+      }
+      if (event.key === "f") {
+        seePixelGrid = !seePixelGrid;
+      }
+      if (event.key === "z") {
+        showFacesWireframe = !showFacesWireframe;
+      }
+
+      if (event.key === " ") {
+        colorIndex = (colorIndex + 1) % carColors.length;
+        car.color = carColors[colorIndex];
+      }
+    });
+
+    document.addEventListener("keyup", (event) => {
+      keys[event.key] = false;
+    });
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let lastTime = 0;
+    function loop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      let dt = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+
+      update(dt);
+      draw();
+
+      requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+  </script>
+</html>
