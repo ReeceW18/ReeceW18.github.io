@@ -14,6 +14,23 @@
       canvas {
         display: block;
       }
+
+      button {
+        padding: 4px 8px;
+        background: rgba(10, 10, 20, 0);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        color: #eee;
+        font-size: 20px;
+      }
+      button:hover {
+        background: rgba(10, 10, 20, 0.5);
+      }
+      button:active {
+        transform: scale(0.95);
+      }
     </style>
   </head>
   <body>
@@ -22,54 +39,202 @@
         position: fixed;
         top: 10px;
         left: 10px;
+        right: 10px;
         z-index: 1000;
-        max-width: 550px;
-        background: rgba(0, 0, 0, 0.5);
+        max-width: 700px;
         font-family: Arial, sans-serif;
+        backdrop-filter: blur(8px);
+        background: rgba(10, 10, 20, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
       "
     >
-      <details open style="padding: 0px 15px; padding-top: 10px">
-        <summary style="font-size: 20px">
+      <details open style="padding: 10px 15px">
+        <summary style="font-size: 24px">
           Vaporwave Interactive Experience - Reece Whitaker
         </summary>
-        <div style="">
+        <div style="line-height: 1.5; color: #d0d0d8; font-size: 16px">
           <p>
             This is a project completed in September 2026 as the first project
             for my Graphics Programming course. Visuals were inspired by
             vaporwave style scrolling screensavers. See [TODO: INSERT LINK] for
             full documentation.<br /><br />
             The project has 3 render modes: wireframe, pixel edges, and pixel
-            faces. Where wireframe uses js canvas' built in line drawing with
-            x,y generated using pinhole projection. Pixel edges and pixel faces
-            use rasterization on a simualted 320x200 pixel display. Pixel edges
-            uses a line rasterization algorithm to draw edges, while pixel faces
-            uses a triangle rasterization algorithm to draw faces. All objects
+            faces. Wireframe uses js canvas' built in line drawing with x,y
+            generated using pinhole projection. Pixel edges and pixel faces use
+            rasterization on a simualted 320x200 pixel display. Pixel edges uses
+            a line rasterization algorithm to draw edges, while pixel faces uses
+            a triangle rasterization algorithm to draw faces. All objects
             represented in real space and transformed into uv projection.
           </p>
-          <b>Controls:</b> WASDQE or arrow keys, '.', ',' to move within bounds,
-          SPACE to change car color, R to reset, Z to show wireframe in faces
-          mode, 123 to change mode, F to view pixel grid.<br />
+          <div style="font-size: 16px; line-height: 1.6; color: #b0b0be">
+            <b style="color: #fff">Controls:</b>
+            <span
+              style="
+                background: rgba(255, 255, 255, 0.12);
+                padding: 2px 6px;
+                border-radius: 4px;
+                color: #fff;
+              "
+              >WASDQE / Arrows, comma, period</span
+            >
+            Move &nbsp;
+            <span
+              style="
+                background: rgba(255, 255, 255, 0.12);
+                padding: 2px 6px;
+                border-radius: 4px;
+                color: #fff;
+              "
+              >SPACE</span
+            >
+            Car Color &nbsp;
+            <span
+              style="
+                background: rgba(255, 255, 255, 0.12);
+                padding: 2px 6px;
+                border-radius: 4px;
+                color: #fff;
+              "
+              >R</span
+            >
+            Reset
+          </div>
         </div>
       </details>
-      <div style="padding: 10px">
-        <button onclick="setMode('wireframe')">Wireframe</button>
-        <button onclick="setMode('rasterEdges')">Pixel Edges</button>
-        <button onclick="setMode('rasterFaces')">Pixel Faces</button>
+    </div>
+    <div
+      style="
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      "
+    >
+      <button onclick="setMode('wireframe')">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >1</span
+        >
+        Wireframe
+      </button>
+      <button onclick="setMode('rasterEdges')">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >2</span
+        >
+        Raster Edges
+      </button>
+      <button onclick="setMode('rasterFaces')">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >3</span
+        >
+        Raster Faces
+      </button>
+      <button onclick="togglePalette()">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >Z</span
+        >
+        Palette
+      </button>
+      <button onclick="togglePixelGrid()">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >X</span
+        >
+        Grid
+      </button>
+      <button onclick="toggleWireframe()">
+        <span
+          style="
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+          "
+          >C</span
+        >
+        Wireframe
+      </button>
+    </div>
+
+    <div
+      id="paletteHUD"
+      style="
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-family: monospace, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+        z-index: 1000;
+      "
+    >
+      <div style="display: flex; align-items: baseline; gap: 8px">
+        <span
+          id="paletteTitle"
+          style="font-size: 20px; font-weight: bold; letter-spacing: 0.5px"
+        >
+          Original
+        </span>
       </div>
+      <!-- Color swatch chips injected here dynamically -->
+      <div
+        id="paletteSwatches"
+        style="display: flex; gap: 5px; align-items: center"
+      ></div>
     </div>
 
     <canvas id="canvas"></canvas>
   </body>
 
   <script>
-    // General TODOS
-    // - abstract colors to single location
-
     // What would be ideal clean ups to be perfect, but ignoring
+    // - make list of all lines to be drawn with depth information saved,
+    // then draw lines in order of depth so wireframe overlapping items are correct
     // - use {x,y,z} everywhere instead of mixing with {u,v,z}
-    // - clean up space expectations, e.g. drawLine expects screen space while drawTri expects model space + object info
-    // - pixelGrid management, in some places instance new object when changing a pixel while in others just change value of the pixel already there. make consistent
-    //   - initilization actually currently fills the rows in a column with same instance
+    // - clean up space expectations, e.g. drawLine expects screen space while
+    // drawTri expects model space + object info
+    // - pixelGrid management, in some places instance new object when changing
+    // a pixel while in others just change value of the pixel already there.
+    //   - initilization currently fills the rows in a column with same instance
     // - unify camera info into a single object (position, limits, clipstart, fov)
     //
     // other potential features
@@ -83,18 +248,389 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    const PALETTE = {
-      bg: "#050530",
+    // COLOR PALETTES
+
+    // --- PALETTE COLOR LISTS ---
+
+    const ORIGINALPALETTE = [
+      "#050530", // 0: bg
+      "midnightblue", // 1: pixelGrid
+      "orange", // 2: sun
+      "lightgray", // 3: mountains
+      "orchid", // 4: ground
+      "yellow", // 5: roadLines
+      "yellow", // 6: lights
+      "green", // 7: signs
+      "red", // 8: obstacles
+      "white", // 9: default (wireframe)
+      // Car colors:
+      "blue", // 10
+      "red", // 11
+      "green", // 12
+      "yellow", // 13
+      "orange", // 14
+      "purple", // 15
+      "pink", // 16
+      "brown", // 17
+      "gray", // 18
+    ];
+
+    const VAPORSTHETIC = [
+      "#ffe0f7", // 0
+      "#f5c9eb", // 1
+      "#f5c1e5", // 2
+      "#fc92fa", // 3
+      "#fb6cff", // 4
+      "#ff7dcb", // 5
+      "#ff4aa7", // 6
+      "#feffbe", // 7
+      "#ffd08a", // 8
+      "#ff8370", // 9
+      "#cbffe6", // 10
+      "#83ded2", // 11
+      "#66b9c1", // 12
+      "#afe9ff", // 13
+      "#94c4ff", // 14
+      "#8f8cf3", // 15
+      "#a453f5", // 16
+      "#764ead", // 17
+      "#6a1483", // 18
+      "#482254", // 19
+    ];
+
+    const PASTELHORIZONPLUS = [
+      "#2f2556", // 0
+      "#584c84", // 1
+      "#827caf", // 2
+      "#aeabd3", // 3
+      "#cecff0", // 4
+      "#ffffff", // 5
+      "#c9ffbf", // 6
+      "#78d8b7", // 7
+      "#34ada1", // 8
+      "#257d9b", // 9
+      "#25bcc6", // 10
+      "#a0fff0", // 11
+      "#84a594", // 12
+      "#cfd3af", // 13
+      "#fff2d1", // 14
+      "#ffd9ae", // 15
+      "#ffa582", // 16
+      "#ff807e", // 17
+      "#ff5470", // 18
+      "#985868", // 19
+      "#b78482", // 20
+      "#dda49f", // 21
+      "#e0bdc1", // 22
+      "#7789ef", // 23
+      "#5ec1ff", // 24
+      "#bae6ff", // 25
+      "#e2d3ff", // 26
+      "#be9bff", // 27
+      "#9968e2", // 28
+      "#ff9bb6", // 29
+      "#ffccdc", // 30
+      "#ffeaf6", // 31
+    ];
+
+    // 6 referenced colors (0-5) + accents (6-8)
+    const COLORPALETTESTUDIO = [
+      "#eda381", // 0: peachglitch (sun, roadLines, lights)
+      "#ed4bbc", // 1: virtualrose (ground)
+      "#55efd5", // 2: neonaqua (signs)
+      "#c6f5f2", // 3: cybermist (obstacles)
+      "#8207db", // 4: cyberplum (car)
+      "#f5d8f2", // 5: dreampink (default/wireframe)
+      "#2f2556", // 6: bg
+      "#584c84", // 7: pixelGrid
+      "#cecff0", // 8: mountains
+    ];
+
+    // 6 referenced colors (0-5) + accents (6-7)
+    const SCHEMECOLOR = [
+      "#300350", // 0: dark blue / purple (bg)
+      "#94167f", // 1: magenta (signs)
+      "#e93479", // 2: red/pink (obstacles)
+      "#f9ac53", // 3: orange/yellow (sun, roadLines, lights)
+      "#f62e97", // 4: neon pink (ground)
+      "#153cb4", // 5: blue (car, mountains)
+      "#584c84", // 6: pixelGrid
+      "#ffffff", // 7: default/wireframe
+    ];
+
+    // --- PALETTE DEFINITIONS WITH INDEX MAPPINGS ---
+
+    const PALETTES = [
+      {
+        name: "Vaporsthetic",
+        colors: VAPORSTHETIC,
+        indices: {
+          default: 0,
+          mountains: 1,
+          ground: 4,
+          obstacles: 6,
+          lights: 7,
+          roadLines: 8,
+          sun: 9,
+          signs: 12,
+          car: 15,
+          pixelGrid: 18,
+          bg: 19,
+        },
+      },
+      {
+        name: "Original",
+        colors: ORIGINALPALETTE,
+        indices: {
+          bg: 0,
+          pixelGrid: 1,
+          sun: 2,
+          mountains: 3,
+          ground: 4,
+          roadLines: 5,
+          lights: 6,
+          signs: 7,
+          obstacles: 8,
+          default: 9,
+          car: 10,
+        },
+      },
+      {
+        name: "Pastel Horizon",
+        colors: PASTELHORIZONPLUS,
+        indices: {
+          bg: 0,
+          pixelGrid: 1,
+          mountains: 4,
+          default: 5,
+          signs: 8,
+          lights: 14,
+          roadLines: 15,
+          sun: 16,
+          obstacles: 18,
+          car: 23,
+          ground: 28,
+        },
+      },
+      {
+        name: "Color Palette Studio",
+        colors: COLORPALETTESTUDIO,
+        indices: {
+          sun: 0,
+          roadLines: 0,
+          lights: 0,
+          ground: 1,
+          signs: 2,
+          obstacles: 3,
+          car: 4,
+          default: 5,
+          bg: 6,
+          pixelGrid: 7,
+          mountains: 8,
+        },
+      },
+      {
+        name: "Scheme Color",
+        colors: SCHEMECOLOR,
+        indices: {
+          bg: 0,
+          signs: 1,
+          obstacles: 2,
+          sun: 3,
+          roadLines: 3,
+          lights: 3,
+          ground: 4,
+          car: 5,
+          mountains: 5,
+          pixelGrid: 6,
+          default: 7,
+        },
+      },
+    ];
+
+    //old palettes
+
+    const oldPALETTE = {
+      bg: "#050530", // dark blue
       sun: "orange",
-      mountains: "gray",
+      mountains: "lightgray",
       ground: "orchid",
       roadLines: "yellow",
       lights: "yellow",
       signs: "green",
       obstacles: "red",
+      pixelGrid: "midnightblue", // slightly less dark blue
+      car: "blue",
       default: "white",
     };
 
+    const vaporsthetic = {
+      bg: "#482254", // dark purple
+      sun: "#ff8370", // orange
+      mountains: "#f5c9eb", // light pink
+      ground: "#fb6cff", // hot pink
+      roadLines: "#ffd08a", // light yellow
+      lights: "#feffbe", //orange-yellow
+      signs: "#83ded2", // green
+      obstacles: "#ff4aa7", //hot pink
+      pixelGrid: "#6a1483", //darkish purple
+      car: "#a453f5", //purple
+      default: "#ffe0f7", //very light pink
+    };
+
+    const pastelhorizon = {
+      bg: "#2f2556", // dark blue
+      sun: "#ffa582", // orange
+      mountains: "#cecff0", // lightish blue grey
+      ground: "#9968e2", // pastel purple
+      roadLines: "#ffd9ae", // desaturated yellow
+      lights: "#fff2d1", // light desaturated yellow
+      signs: "#34ada1", // green
+      obstacles: "#ff5470", // red
+      pixelGrid: "#584c84", // darkish blue grey
+      car: "#7789ef", // blue
+      default: "#ffffff", //white
+    };
+
+    const colorpalettestudio = {
+      bg: "#2f2556", // dark blue
+      sun: "#eda381", // orange "peachglitch"
+      mountains: "#cecff0", // lightish blue grey
+      ground: "#ed4bbc", // hotpink "virtualrose"
+      roadLines: "#eda381", // "peachglitch"
+      lights: "#eda381", // "peachglitch"
+      signs: "#55efd5", // aqua "neonaqua"
+      obstacles: "#c6f5f2", // "cybermist"
+      pixelGrid: "#584c84", // darkish blue grey
+      car: "#8207db", // "cyberplum"
+      default: "#f5d8f2", // "dreampink"
+    };
+
+    const schemecolor = {
+      bg: "#300350", // dark blue 1
+      sun: "#f9ac53", // orange 4
+      mountains: "#153cb4", // lightish blue grey
+      ground: "#f62e97", // pastel purple 5
+      roadLines: "#f9ac53", // desaturated yellow 4
+      lights: "#f9ac53", // light desaturated yellow 4
+      signs: "#94167f", // green 2
+      obstacles: "#e93479", // red 3
+      pixelGrid: "#584c84", // darkish blue grey
+      car: "#153cb4", // blue 6
+      default: "#ffffff", //white
+    };
+
+    let oldcarColors = [
+      //PALETTE.car,
+      "red",
+      "green",
+      "yellow",
+      "orange",
+      "purple",
+      "pink",
+      "brown",
+      "gray",
+    ];
+
+    const PALETTE = {};
+    let currentPaletteIndex = 0;
+    let carColors = [];
+    let colorIndex = 0;
+
+    function loadPalette(index) {
+      currentPaletteIndex = (index + PALETTES.length) % PALETTES.length;
+      const def = PALETTES[currentPaletteIndex];
+
+      for (const [role, idx] of Object.entries(def.indices)) {
+        PALETTE[role] = def.colors[idx];
+      }
+
+      const availableColors = def.colors.filter(
+        (color) => color !== PALETTE.bg && color !== PALETTE.default,
+      );
+      const uniqueCarColors = [...new Set(availableColors)];
+
+      if (uniqueCarColors.includes(PALETTE.car)) {
+        carColors = [
+          PALETTE.car,
+          ...uniqueCarColors.filter((c) => c !== PALETTE.car),
+        ];
+      } else {
+        carColors = uniqueCarColors;
+      }
+
+      colorIndex = 0;
+
+      // --- Update HUD Styling & Swatches ---
+      const hud = document.getElementById("paletteHUD");
+      const title = document.getElementById("paletteTitle");
+      const swatches = document.getElementById("paletteSwatches");
+
+      if (title) {
+        title.textContent = def.name;
+        title.style.color = PALETTE.default; // Color title with palette's default wireframe color
+      }
+
+      if (hud) {
+        // Subtle glow using PALETTE.default
+        hud.style.borderColor = PALETTE.default;
+        hud.style.boxShadow = `0 4px 20px ${PALETTE.default}33`;
+      }
+
+      if (swatches) {
+        // Pull the prominent scene colors (ignoring background so it stays legible)
+        const keyRoles = [
+          "bg",
+          "pixelGrid",
+          "sun",
+          "roadLines",
+          "lights",
+          "mountains",
+          "obstacles",
+          "signs",
+          "car",
+          "ground",
+        ];
+        const mainColors = [
+          ...new Set(keyRoles.map((r) => PALETTE[r]).filter(Boolean)),
+        ];
+
+        swatches.innerHTML = mainColors
+          .map(
+            (c) => `
+                    <span
+                      title="${c}"
+                      style="
+                        width: 14px;
+                        height: 14px;
+                        border-radius: 3px;
+                        background-color: ${c};
+                        display: inline-block;
+                        border: 1px solid rgba(255,255,255,0.2);
+                        box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+                      ">
+                    </span>`,
+          )
+          .join("");
+      }
+    }
+
+    loadPalette(0);
+
+    function applyPalette(index) {
+      loadPalette(index);
+      mountains.forEach((m) => {
+        m.color = PALETTE.mountains;
+      });
+      sun.color = PALETTE.sun;
+      car.color = carColors[colorIndex];
+    }
+
+    function togglePalette() {
+      applyPalette(currentPaletteIndex + 1);
+    }
+
+    //let colorIndex = 0;
     const rows = 200;
     const cols = 320;
     const pixelGrid = Array.from({ length: cols }, () =>
@@ -111,19 +647,6 @@
     const defaultCarPosition = Object.freeze({ x: 0, y: 1, z: 10 });
     const defaultCameraPosition = Object.freeze({ x: 0, y: 10, z: -25 });
 
-    let carColors = [
-      "blue",
-      "red",
-      "green",
-      "yellow",
-      "orange",
-      "purple",
-      "pink",
-      "brown",
-      "gray",
-    ];
-    let colorIndex = 0;
-
     // wireframe, rasterEdges, rasterFaces
     let mode = localStorage.getItem("mode") || "wireframe";
 
@@ -132,6 +655,14 @@
     function setMode(newMode) {
       mode = newMode;
       localStorage.setItem("mode", newMode);
+    }
+
+    function toggleWireframe() {
+      showFacesWireframe = !showFacesWireframe;
+    }
+
+    function togglePixelGrid() {
+      seePixelGrid = !seePixelGrid;
     }
 
     // represents imagined z position, camera.z never actually changes
@@ -147,10 +678,7 @@
     let numLightMeshes = meshLimit / meshInterval;
 
     let camera = { ...defaultCameraPosition };
-    let camLimits = {
-      miny: 1,
-      maxy: 15,
-    };
+    let camLimits = { miny: 1, maxy: 23 };
     let clipStart = 0.5;
     let fov = 1.5;
 
@@ -631,24 +1159,28 @@
       drawHorizontalLines();
       drawRoadLines();
       //drawObject(bounds);
-      drawRepeatingMeshes();
-      drawMountains();
-      drawObject(sun);
       drawObject(car);
+      drawRepeatingMeshes();
+      drawObject(sun);
+      drawMountains();
 
       // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
+
+      const offsetX = Math.floor((canvas.width - cols * 5) / 2);
+
       if (mode === "rasterEdges" || mode === "rasterFaces") {
         for (let i = 0; i < cols; i++) {
           for (let j = 0; j < rows; j++) {
             ctx.fillStyle = pixelGrid[i][j].color;
             // drawing rect is expensive so only draw non-background pixels
             if (ctx.fillStyle != PALETTE.bg) {
-              ctx.fillRect(i * 5, j * 5, 5, 5);
+              ctx.fillRect(offsetX + i * 5, j * 5, 5, 5);
             }
 
-            ctx.strokeStyle = "grey";
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = PALETTE.pixelGrid;
             if (seePixelGrid) {
-              ctx.strokeRect(i * 5, j * 5, 5, 5);
+              ctx.strokeRect(offsetX + i * 5, j * 5, 5, 5);
             }
           }
         }
@@ -765,6 +1297,43 @@
         };
 
         drawObject(cube);
+      }
+      for (let i = 0; i < numLightMeshes; i++) {
+        let rawZ = i * meshInterval - ((relativeOffset + camera.z) % meshLimit);
+        let meshWorldZ = rawZ;
+
+        // wrap mesh world z
+        if (meshWorldZ < camera.z) {
+          meshWorldZ += meshLimit;
+        }
+
+        let scale = scales[i % scales.length];
+
+        let instance = {
+          mesh: lightMesh,
+          position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
+          scale: scale,
+          color: PALETTE.lights,
+        };
+
+        let cubeX =
+          -roadWidth / 4 + ((Math.floor(scale * 100) % 2) * roadWidth) / 2;
+        // let cubeZ = meshWorldZ + ((scale * 100) % 20);
+        let cubeZ = meshWorldZ;
+        let normalizedRandom = (scale - 0.8) / (1.2 - 0.8);
+        let cubeScale = normalizedRandom * (4 - 0.5) + 0.5;
+
+        let cube = {
+          mesh: Math.floor(scale * 1000) % 2 === 0 ? cubeMesh : cylinderMesh,
+          position: {
+            x: cubeX,
+            y: cubeScale / 2,
+            z: cubeZ,
+          },
+          scale: cubeScale,
+          color: PALETTE.obstacles,
+        };
+
         drawObject(instance);
       }
       for (
@@ -1060,6 +1629,11 @@
         speed = 100;
         relativeOffset = 0;
         colorIndex = 0;
+        applyPalette(0);
+        seePixelGrid = false;
+        showFacesWireframe = false;
+        mode = "wireframe";
+        localStorage.setItem("mode", "wireframe");
         car.color = carColors[colorIndex];
       }
       if (event.key === "1") {
@@ -1074,11 +1648,14 @@
         mode = "rasterFaces";
         localStorage.setItem("mode", "rasterFaces");
       }
-      if (event.key === "f") {
+      if (event.key === "x") {
         seePixelGrid = !seePixelGrid;
       }
-      if (event.key === "z") {
+      if (event.key === "c") {
         showFacesWireframe = !showFacesWireframe;
+      }
+      if (event.key === "z") {
+        togglePalette();
       }
 
       if (event.key === " ") {
