@@ -16,7 +16,7 @@
       }
 
       button {
-        padding: 4px 8px;
+        padding: 8px 8px;
         background: rgba(10, 10, 20, 0);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.5);
@@ -31,10 +31,120 @@
       button:active {
         transform: scale(0.95);
       }
+
+      /* @media block is LLM generated styling for mobile usability */
+      /* The outer container pinning everything to the bottom */
+      #bottomDeck {
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        z-index: 1000;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start; /* Pin items to the very bottom */
+        gap: 12px;
+        /* MOST IMPORTANT: When room runs out horizontally, wrap UPWARDS */
+        flex-wrap: wrap-reverse;
+        /* Let clicks through empty space reach the canvas */
+        pointer-events: none;
+      }
+
+      /* Re-enable clicks exactly on the buttons and HUD card */
+      #bottomDeck > * {
+        pointer-events: auto;
+      }
+
+      .button-bar {
+        display: grid;
+        grid-template-columns: repeat(6, auto);
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* Keep palette card right-aligned even when wrapped safely above buttons */
+      #paletteHUD {
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-family: monospace, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      #paletteTitle {
+        font-size: 20px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+      }
+
+      #paletteSwatches {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+
+      /* Mobile Adjustments (Max Width 700px) */
+      @media (max-width: 900px) {
+        .button-bar {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        #paletteHUD {
+          align-items: flex-start;
+        }
+        #paletteTitle {
+          align-items: flex-start;
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 450px) {
+        .button-bar {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 700px) {
+        /* Scale top info box */
+        .info-panel {
+          border-radius: 0 0 8px 8px !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+        }
+        .info-panel summary {
+          font-size: 16px !important;
+        }
+        .info-panel .body-text {
+          font-size: 13px !important;
+          max-height: 40vh; /* Keeps text from covering whole phone screen */
+          overflow-y: auto;
+        }
+
+        /* Scale bottom buttons and HUD */
+        button {
+          font-size: 13px !important;
+          padding: 5px 8px !important;
+        }
+        button span {
+          font-size: 11px !important;
+          padding: 1px 4px !important;
+        }
+        #paletteTitle {
+          font-size: 16px;
+        }
+        #paletteHUD {
+          padding: 6px 12px;
+        }
+      }
     </style>
   </head>
   <body>
     <div
+      class="info-panel"
       style="
         position: fixed;
         top: 10px;
@@ -51,10 +161,13 @@
       "
     >
       <details open style="padding: 10px 15px">
-        <summary style="font-size: 24px">
+        <summary id="infoTitle" style="font-size: 24px">
           Vaporwave Interactive Experience - Reece Whitaker
         </summary>
-        <div style="line-height: 1.5; color: #d0d0d8; font-size: 16px">
+        <div
+          class="body-text"
+          style="line-height: 1.5; color: #d0d0d8; font-size: 16px"
+        >
           <p>
             This is a project completed in September 2026 as the first project
             for my Graphics Programming course. Visuals were inspired by
@@ -104,124 +217,90 @@
         </div>
       </details>
     </div>
-    <div
-      style="
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        padding: 10px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      "
-    >
-      <button onclick="setMode('wireframe')">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >1</span
-        >
-        Wireframe
-      </button>
-      <button onclick="setMode('rasterEdges')">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >2</span
-        >
-        Raster Edges
-      </button>
-      <button onclick="setMode('rasterFaces')">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >3</span
-        >
-        Raster Faces
-      </button>
-      <button onclick="togglePalette()">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >Z</span
-        >
-        Palette
-      </button>
-      <button onclick="togglePixelGrid()">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >X</span
-        >
-        Grid
-      </button>
-      <button onclick="toggleWireframe()">
-        <span
-          style="
-            background: rgba(255, 255, 255, 0.12);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fff;
-          "
-          >C</span
-        >
-        Wireframe
-      </button>
-    </div>
-
-    <div
-      id="paletteHUD"
-      style="
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 10px 16px;
-        font-family: monospace, Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-end;
-        z-index: 1000;
-      "
-    >
-      <div style="display: flex; align-items: baseline; gap: 8px">
-        <span
-          id="paletteTitle"
-          style="font-size: 20px; font-weight: bold; letter-spacing: 0.5px"
-        >
-          Original
-        </span>
+    <div id="bottomDeck">
+      <div class="button-bar">
+        <button onclick="setMode('wireframe')">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >1</span
+          >
+          Wireframe
+        </button>
+        <button onclick="setMode('rasterEdges')">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >2</span
+          >
+          Raster Edges
+        </button>
+        <button onclick="setMode('rasterFaces')">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >3</span
+          >
+          Raster Faces
+        </button>
+        <button onclick="togglePalette()">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >Z</span
+          >
+          Palette
+        </button>
+        <button onclick="togglePixelGrid()">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >X</span
+          >
+          Grid
+        </button>
+        <button onclick="toggleWireframe()">
+          <span
+            style="
+              background: rgba(255, 255, 255, 0.12);
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: #fff;
+            "
+            >C</span
+          >
+          Wireframe
+        </button>
       </div>
-      <!-- Color swatch chips injected here dynamically -->
-      <div
-        id="paletteSwatches"
-        style="display: flex; gap: 5px; align-items: center"
-      ></div>
-    </div>
 
+      <div id="paletteHUD">
+        <div style="display: flex; align-items: baseline; gap: 8px">
+          <span id="paletteTitle"> Original </span>
+        </div>
+        <!-- Color swatch chips injected here dynamically -->
+        <div id="paletteSwatches"></div>
+      </div>
+    </div>
     <canvas id="canvas"></canvas>
   </body>
 
