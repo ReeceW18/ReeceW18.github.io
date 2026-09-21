@@ -32,7 +32,7 @@
         transform: scale(0.95);
       }
 
-      /* @media block is LLM generated styling for mobile usability */
+      /* remainder of style block is vibe coded styling for mobile/thin window usability */
       /* The outer container pinning everything to the bottom */
       #bottomDeck {
         position: fixed;
@@ -108,22 +108,10 @@
       }
 
       @media (max-width: 700px) {
-        /* Scale top info box */
-        .info-panel {
-          border-radius: 0 0 8px 8px !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-        }
-        .info-panel summary {
-          font-size: 16px !important;
-        }
         .info-panel .body-text {
-          font-size: 13px !important;
-          max-height: 40vh; /* Keeps text from covering whole phone screen */
+          max-height: 100vh;
           overflow-y: auto;
         }
-
         /* Scale bottom buttons and HUD */
         button {
           font-size: 13px !important;
@@ -757,7 +745,7 @@
     let numLightMeshes = meshLimit / meshInterval;
 
     let camera = { ...defaultCameraPosition };
-    let camLimits = { miny: 1, maxy: 23 };
+    let camLimits = { miny: 1, maxy: 30 };
     let clipStart = 0.5;
     let fov = 1.5;
 
@@ -1234,6 +1222,7 @@
         }
       }
 
+      // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
       drawVerticalLines();
       drawHorizontalLines();
       drawRoadLines();
@@ -1243,9 +1232,14 @@
       drawObject(sun);
       drawMountains();
 
-      // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
-
-      const offsetX = Math.floor((canvas.width - cols * 5) / 2);
+      // simulated screen centers horizontally, top of screen is anchored, if
+      // canvas is exceedingly short relative to simualted screen height (mobile)
+      // start scaling the simualted screen down to preserve experience
+      let scale = 1;
+      if (rows * 5 - 150 > canvas.height) {
+        scale = canvas.height / (rows * 5 - 150);
+      }
+      const offsetX = Math.floor((canvas.width - cols * 5 * scale) / 2);
 
       if (mode === "rasterEdges" || mode === "rasterFaces") {
         for (let i = 0; i < cols; i++) {
@@ -1253,13 +1247,23 @@
             ctx.fillStyle = pixelGrid[i][j].color;
             // drawing rect is expensive so only draw non-background pixels
             if (ctx.fillStyle != PALETTE.bg) {
-              ctx.fillRect(offsetX + i * 5, j * 5, 5, 5);
+              ctx.fillRect(
+                Math.floor(offsetX + i * 5 * scale),
+                Math.floor(j * 5 * scale),
+                Math.ceil(5 * scale),
+                Math.ceil(5 * scale),
+              );
             }
 
             ctx.lineWidth = 1;
             ctx.strokeStyle = PALETTE.pixelGrid;
             if (seePixelGrid) {
-              ctx.strokeRect(offsetX + i * 5, j * 5, 5, 5);
+              ctx.strokeRect(
+                Math.floor(offsetX + i * 5 * scale),
+                Math.floor(j * 5 * scale),
+                Math.ceil(5 * scale),
+                Math.ceil(5 * scale),
+              );
             }
           }
         }
