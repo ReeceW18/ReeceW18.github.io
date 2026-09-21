@@ -39,7 +39,7 @@
         bottom: 12px;
         left: 12px;
         right: 12px;
-        z-index: 1000;
+        z-index: 500;
         display: flex;
         justify-content: space-between;
         align-items: flex-start; /* Pin items to the very bottom */
@@ -1061,7 +1061,7 @@
     };
     let sun = {
       mesh: sunMesh,
-      position: { x: 0, y: 2500, z: horizon.z + 100 },
+      position: { x: 0, y: 2000, z: horizon.z + 100 },
       scale: 1000,
       color: PALETTE.sun,
     };
@@ -1235,11 +1235,11 @@
       // simulated screen centers horizontally, top of screen is anchored, if
       // canvas is exceedingly short relative to simualted screen height (mobile)
       // start scaling the simualted screen down to preserve experience
-      let scale = 1;
-      if (rows * 5 - 150 > canvas.height) {
-        scale = canvas.height / (rows * 5 - 150);
+      let scale = 5;
+      if (rows * 5 - 125 > canvas.height) {
+        scale = Math.floor(canvas.height / rows);
       }
-      const offsetX = Math.floor((canvas.width - cols * 5 * scale) / 2);
+      const offsetX = Math.floor((canvas.width - cols * scale) / 2);
 
       if (mode === "rasterEdges" || mode === "rasterFaces") {
         for (let i = 0; i < cols; i++) {
@@ -1247,23 +1247,13 @@
             ctx.fillStyle = pixelGrid[i][j].color;
             // drawing rect is expensive so only draw non-background pixels
             if (ctx.fillStyle != PALETTE.bg) {
-              ctx.fillRect(
-                Math.floor(offsetX + i * 5 * scale),
-                Math.floor(j * 5 * scale),
-                Math.ceil(5 * scale),
-                Math.ceil(5 * scale),
-              );
+              ctx.fillRect(offsetX + i * scale, j * scale, scale, scale);
             }
 
             ctx.lineWidth = 1;
             ctx.strokeStyle = PALETTE.pixelGrid;
             if (seePixelGrid) {
-              ctx.strokeRect(
-                Math.floor(offsetX + i * 5 * scale),
-                Math.floor(j * 5 * scale),
-                Math.ceil(5 * scale),
-                Math.ceil(5 * scale),
-              );
+              ctx.strokeRect(offsetX + i * scale, j * scale, scale, scale);
             }
           }
         }
