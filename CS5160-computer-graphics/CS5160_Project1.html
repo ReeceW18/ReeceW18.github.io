@@ -1555,13 +1555,20 @@
 
       if (Math.abs(totalArea) < 1e-5) return;
 
+      // reuse same object for optimization
+      let p = { u: 0, v: 0 };
+      // precompute division operation for optimization
+      let invTotalArea = 1 / totalArea;
+
       // check if each pixel in tri and draw if is
       for (let v = minV; v <= maxV; v++) {
+        p.v = v;
         for (let u = minU; u <= maxU; u++) {
+          p.u = u;
           // get barycentric weights
-          let w1 = signedArea2DTri({ u: u, v: v }, vert2, vert3) / totalArea;
-          let w2 = signedArea2DTri(vert1, { u: u, v: v }, vert3) / totalArea;
-          let w3 = signedArea2DTri(vert1, vert2, { u: u, v: v }) / totalArea;
+          let w1 = signedArea2DTri(p, vert2, vert3) * invTotalArea;
+          let w2 = signedArea2DTri(vert1, p, vert3) * invTotalArea;
+          let w3 = signedArea2DTri(vert1, vert2, p) * invTotalArea;
 
           // check if pixel is inside tri and draw if so
           if (
@@ -1636,7 +1643,7 @@
     function update(dt) {
       relativeOffset = relativeOffset + speed * dt;
 
-      const acceleration = 7;
+      const acceleration = 100 * dt;
       const moveSpeed = 50 * dt;
 
       if (keys["ArrowUp"] || keys["w"]) {
