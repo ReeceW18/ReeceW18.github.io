@@ -1,670 +1,610 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vaporwave Interactive Experience</title>
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        background-color: #050510;
-        color: white;
-      }
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vaporwave Interactive Experience</title>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+                background-color: #050510;
+                color: white;
+            }
 
-      canvas {
-        display: block;
-      }
+            canvas {
+                display: block;
+            }
 
-      button {
-        padding: 8px 8px;
-        background: rgba(10, 10, 20, 0);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
-        border-radius: 8px;
-        color: #eee;
-        font-size: 20px;
-      }
-      button:hover {
-        background: rgba(10, 10, 20, 0.5);
-      }
-      button:active {
-        transform: scale(0.95);
-      }
+            button {
+                padding: 8px 8px;
+                background: rgba(10, 10, 20, 0);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+                border-radius: 8px;
+                color: #eee;
+                font-size: 20px;
+            }
+            button:hover {
+                background: rgba(10, 10, 20, 0.5);
+            }
+            button:active {
+                transform: scale(0.95);
+            }
 
-      /* remainder of style block is vibe coded styling for mobile/thin window usability */
-      /* The outer container pinning everything to the bottom */
-      #bottomDeck {
-        position: fixed;
-        bottom: 12px;
-        left: 12px;
-        right: 12px;
-        z-index: 500;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start; /* Pin items to the very bottom */
-        gap: 12px;
-        /* MOST IMPORTANT: When room runs out horizontally, wrap UPWARDS */
-        flex-wrap: wrap-reverse;
-        /* Let clicks through empty space reach the canvas */
-        pointer-events: none;
-      }
+            /* remainder of style block is mostly vibe coded styling for mobile/thin window usability */
+            /* The outer container pinning everything to the bottom */
+            #bottomDeck {
+                position: fixed;
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
+                z-index: 500;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start; /* Pin items to the very bottom */
+                gap: 12px;
+                flex-wrap: wrap-reverse;
+                pointer-events: none;
+            }
 
-      /* Re-enable clicks exactly on the buttons and HUD card */
-      #bottomDeck > * {
-        pointer-events: auto;
-      }
+            /* Re-enable clicks exactly on the buttons and HUD card */
+            #bottomDeck > * {
+                pointer-events: auto;
+            }
 
-      .button-bar {
-        display: grid;
-        grid-template-columns: repeat(6, auto);
-        gap: 8px;
-        align-items: center;
-      }
+            .button-bar {
+                display: grid;
+                grid-template-columns: repeat(6, auto);
+                gap: 8px;
+                align-items: center;
+            }
 
-      /* Keep palette card right-aligned even when wrapped safely above buttons */
-      #paletteHUD {
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 10px 16px;
-        font-family: monospace, Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-end;
-      }
+            /* Keep palette card right-aligned even when wrapped safely above buttons */
+            #paletteHUD {
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                padding: 10px 16px;
+                font-family: monospace, Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-end;
+            }
 
-      #paletteTitle {
-        font-size: 20px;
-        font-weight: bold;
-        letter-spacing: 0.5px;
-      }
+            #paletteTitle {
+                font-size: 20px;
+                font-weight: bold;
+                letter-spacing: 0.5px;
+            }
 
-      #paletteSwatches {
-        display: flex;
-        gap: 5px;
-        align-items: center;
-      }
+            #paletteSwatches {
+                display: flex;
+                gap: 5px;
+                align-items: center;
+            }
 
-      /* Mobile Adjustments (Max Width 700px) */
-      @media (max-width: 900px) {
-        .button-bar {
-          grid-template-columns: repeat(3, 1fr);
-        }
-        #paletteHUD {
-          align-items: flex-start;
-        }
-        #paletteTitle {
-          align-items: flex-start;
-          width: 100%;
-        }
-      }
+            /* Mobile Adjustments (Max Width 700px) */
+            @media (max-width: 900px) {
+                .button-bar {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+                #paletteHUD {
+                    align-items: flex-start;
+                }
+                #paletteTitle {
+                    align-items: flex-start;
+                    width: 100%;
+                }
+            }
 
-      @media (max-width: 450px) {
-        .button-bar {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
+            @media (max-width: 450px) {
+                .button-bar {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
 
-      @media (max-width: 700px) {
-        .info-panel .body-text {
-          max-height: 100vh;
-          overflow-y: auto;
-        }
-        /* Scale bottom buttons and HUD */
-        button {
-          font-size: 13px !important;
-          padding: 5px 8px !important;
-        }
-        button span {
-          font-size: 11px !important;
-          padding: 1px 4px !important;
-        }
-        #paletteTitle {
-          font-size: 16px;
-        }
-        #paletteHUD {
-          padding: 6px 12px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div
-      class="info-panel"
-      style="
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        z-index: 1000;
-        max-width: 700px;
-        font-family: Arial, sans-serif;
-        backdrop-filter: blur(8px);
-        background: rgba(10, 10, 20, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
-        border-radius: 8px;
-      "
-    >
-      <details open style="padding: 10px 15px">
-        <summary id="infoTitle" style="font-size: 24px">
-          Vaporwave Interactive Experience - Reece Whitaker
-        </summary>
+            @media (max-width: 700px) {
+                .info-panel .body-text {
+                    max-height: 100vh;
+                    overflow-y: auto;
+                }
+                /* Scale bottom buttons and HUD */
+                button {
+                    font-size: 13px !important;
+                    padding: 5px 8px !important;
+                }
+                button span {
+                    font-size: 11px !important;
+                    padding: 1px 4px !important;
+                }
+                #paletteTitle {
+                    font-size: 16px;
+                }
+                #paletteHUD {
+                    padding: 6px 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
         <div
-          class="body-text"
-          style="line-height: 1.5; color: #d0d0d8; font-size: 16px"
+            class="info-panel"
+            style="
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                z-index: 1000;
+                max-width: 700px;
+                font-family: Arial, sans-serif;
+                backdrop-filter: blur(8px);
+                background: rgba(10, 10, 20, 0.65);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                box-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+                border-radius: 8px;
+            "
         >
-          <p>
-            This is a project completed in September 2026 as the first project
-            for my Graphics Programming course. Visuals were inspired by
-            vaporwave style scrolling screensavers. See [TODO: INSERT LINK] for
-            full documentation.<br /><br />
-            The project has 3 render modes: wireframe, pixel edges, and pixel
-            faces. Wireframe uses js canvas' built in line drawing with x,y
-            generated using pinhole projection. Pixel edges and pixel faces use
-            rasterization on a simualted 320x200 pixel display. Pixel edges uses
-            a line rasterization algorithm to draw edges, while pixel faces uses
-            a triangle rasterization algorithm to draw faces. All objects
-            represented in real space and transformed into uv projection.
-          </p>
-          <div style="font-size: 16px; line-height: 1.6; color: #b0b0be">
-            <b style="color: #fff">Controls:</b>
-            <span
-              style="
-                background: rgba(255, 255, 255, 0.12);
-                padding: 2px 6px;
-                border-radius: 4px;
-                color: #fff;
-              "
-              >WASDQE / Arrows, comma, period</span
-            >
-            Move &nbsp;
-            <span
-              style="
-                background: rgba(255, 255, 255, 0.12);
-                padding: 2px 6px;
-                border-radius: 4px;
-                color: #fff;
-              "
-              >SPACE</span
-            >
-            Car Color &nbsp;
-            <span
-              style="
-                background: rgba(255, 255, 255, 0.12);
-                padding: 2px 6px;
-                border-radius: 4px;
-                color: #fff;
-              "
-              >R</span
-            >
-            Reset
-          </div>
+            <details open style="padding: 10px 15px">
+                <summary id="infoTitle" style="font-size: 24px">
+                    Vaporwave Interactive Experience -
+                    <a
+                        href="https://ReeceW18.github.io"
+                        style="color: #01cdfe"
+                        >Reece Whitaker</a
+                    >
+                </summary>
+                <div
+                    class="body-text"
+                    style="line-height: 1.5; color: #d0d0d8; font-size: 16px"
+                >
+                    <p>
+                        This is a project completed in September 2026 as the
+                        first project for my Graphics Programming course.
+                        Visuals were inspired by vaporwave style scrolling
+                        screensavers. For an overview of design, read the
+                        <a
+                            href="Documentation.html"
+                            style="color: #01cdfe"
+                            >documentation</a
+                        >
+                        or view the code on
+                        <a
+                            href="https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/CS5160_Project1.html"
+                            style="color: #01cdfe"
+                            >Github</a
+                        >.<br /><br />
+                        The project has 3 render modes: wireframe, pixel edges,
+                        and pixel faces. Wireframe uses js canvas' built in line
+                        drawing with x,y generated using pinhole projection.
+                        Pixel edges and pixel faces use rasterization on a
+                        simualted 320x200 pixel display. Pixel edges uses a line
+                        rasterization algorithm to draw edges, while pixel faces
+                        uses a triangle rasterization algorithm to draw faces.
+                        All objects represented in real space and transformed
+                        into uv projection.
+                    </p>
+                    <div
+                        style="
+                            font-size: 16px;
+                            line-height: 1.6;
+                            color: #b0b0be;
+                        "
+                    >
+                        <b style="color: #fff">Controls:</b>
+                        <span
+                            style="
+                                background: rgba(255, 255, 255, 0.12);
+                                padding: 2px 6px;
+                                border-radius: 4px;
+                                color: #fff;
+                            "
+                            >WASDQE / Arrows, comma, period</span
+                        >
+                        Move &nbsp;
+                        <span
+                            style="
+                                background: rgba(255, 255, 255, 0.12);
+                                padding: 2px 6px;
+                                border-radius: 4px;
+                                color: #fff;
+                            "
+                            >SPACE</span
+                        >
+                        Car Color &nbsp;
+                        <span
+                            style="
+                                background: rgba(255, 255, 255, 0.12);
+                                padding: 2px 6px;
+                                border-radius: 4px;
+                                color: #fff;
+                            "
+                            >R</span
+                        >
+                        Reset
+                    </div>
+                </div>
+            </details>
         </div>
-      </details>
-    </div>
-    <div id="bottomDeck">
-      <div class="button-bar">
-        <button onclick="setMode('wireframe')">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >1</span
-          >
-          Wireframe
-        </button>
-        <button onclick="setMode('rasterEdges')">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >2</span
-          >
-          Raster Edges
-        </button>
-        <button onclick="setMode('rasterFaces')">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >3</span
-          >
-          Raster Faces
-        </button>
-        <button onclick="togglePalette()">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >Z</span
-          >
-          Palette
-        </button>
-        <button onclick="togglePixelGrid()">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >X</span
-          >
-          Grid
-        </button>
-        <button onclick="toggleWireframe()">
-          <span
-            style="
-              background: rgba(255, 255, 255, 0.12);
-              padding: 2px 6px;
-              border-radius: 4px;
-              color: #fff;
-            "
-            >C</span
-          >
-          Wireframe
-        </button>
-      </div>
+        <div id="bottomDeck">
+            <div class="button-bar">
+                <button onclick="setMode('wireframe')">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >1</span
+                    >
+                    Wireframe
+                </button>
+                <button onclick="setMode('rasterEdges')">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >2</span
+                    >
+                    Raster Edges
+                </button>
+                <button onclick="setMode('rasterFaces')">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >3</span
+                    >
+                    Raster Faces
+                </button>
+                <button onclick="togglePalette()">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >Z</span
+                    >
+                    Palette
+                </button>
+                <button onclick="togglePixelGrid()">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >X</span
+                    >
+                    Grid
+                </button>
+                <button onclick="toggleWireframe()">
+                    <span
+                        style="
+                            background: rgba(255, 255, 255, 0.12);
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            color: #fff;
+                        "
+                        >C</span
+                    >
+                    Wireframe
+                </button>
+            </div>
 
-      <div id="paletteHUD">
-        <div style="display: flex; align-items: baseline; gap: 8px">
-          <span id="paletteTitle"> Original </span>
+            <div id="paletteHUD">
+                <div style="display: flex; align-items: baseline; gap: 8px">
+                    <span id="paletteTitle"> Original </span>
+                </div>
+                <!-- Color swatch chips injected here dynamically -->
+                <div id="paletteSwatches"></div>
+            </div>
         </div>
-        <!-- Color swatch chips injected here dynamically -->
-        <div id="paletteSwatches"></div>
-      </div>
-    </div>
-    <canvas id="canvas"></canvas>
-  </body>
+        <canvas id="canvas"></canvas>
+    </body>
 
-  <script>
-    // What would be ideal clean ups to be perfect, but ignoring
-    // - make list of all lines to be drawn with depth information saved,
-    // then draw lines in order of depth so wireframe overlapping items are correct
-    // - use {x,y,z} everywhere instead of mixing with {u,v,z}
-    // - clean up space expectations, e.g. drawLine expects screen space while
-    // drawTri expects model space + object info
-    // - pixelGrid management, in some places instance new object when changing
-    // a pixel while in others just change value of the pixel already there.
-    //   - initilization currently fills the rows in a column with same instance
-    // - unify camera info into a single object (position, limits, clipstart, fov)
-    //
-    // other potential features
-    // - draw all edges as faces in face mode
-    //   - drawEdge function
-    // - render faces on floor
+    <script>
+        // Known issues/improvements
+        // - make list of all lines to be drawn with depth information saved,
+        // then draw lines in order of depth so wireframe overlapping items are correct
+        // - use {x,y,z} everywhere instead of mixing with {u,v,z}
+        // - clean up space expectations, e.g. drawLine expects screen space while
+        // drawTri expects model space + object info
+        // - pixelGrid management, in some places instance new object when changing
+        // a pixel while in others just change value of the pixel already there.
+        //   - initilization currently fills the rows in a column with same instance
+        // - unify camera info into a single object (position, limits, clipstart, fov)
+        //
+        // other potential features
+        // - draw all edges as faces in face mode
+        //   - abstracted drawEdge function that takes in world space coordinates
+        // - render faces on floor
 
-    // GLOBAL VARS
+        // ===========================================================
+        // GLOBAL VARS
+        // ===========================================================
 
-    // canvas setup
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+        // canvas setup
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
 
-    // COLOR PALETTES
+        // --- Color Palettes ----------------------------------------
 
-    // --- PALETTE COLOR LISTS ---
-
-    const ORIGINALPALETTE = [
-      "#050530", // 0: bg
-      "midnightblue", // 1: pixelGrid
-      "orange", // 2: sun
-      "lightgray", // 3: mountains
-      "orchid", // 4: ground
-      "yellow", // 5: roadLines
-      "yellow", // 6: lights
-      "green", // 7: signs
-      "red", // 8: obstacles
-      "white", // 9: default (wireframe)
-      // Car colors:
-      "blue", // 10
-      "red", // 11
-      "green", // 12
-      "yellow", // 13
-      "orange", // 14
-      "purple", // 15
-      "pink", // 16
-      "brown", // 17
-      "gray", // 18
-    ];
-
-    const VAPORSTHETIC = [
-      "#ffe0f7", // 0
-      "#f5c9eb", // 1
-      "#f5c1e5", // 2
-      "#fc92fa", // 3
-      "#fb6cff", // 4
-      "#ff7dcb", // 5
-      "#ff4aa7", // 6
-      "#feffbe", // 7
-      "#ffd08a", // 8
-      "#ff8370", // 9
-      "#cbffe6", // 10
-      "#83ded2", // 11
-      "#66b9c1", // 12
-      "#afe9ff", // 13
-      "#94c4ff", // 14
-      "#8f8cf3", // 15
-      "#a453f5", // 16
-      "#764ead", // 17
-      "#6a1483", // 18
-      "#482254", // 19
-    ];
-
-    const PASTELHORIZONPLUS = [
-      "#2f2556", // 0
-      "#584c84", // 1
-      "#827caf", // 2
-      "#aeabd3", // 3
-      "#cecff0", // 4
-      "#ffffff", // 5
-      "#c9ffbf", // 6
-      "#78d8b7", // 7
-      "#34ada1", // 8
-      "#257d9b", // 9
-      "#25bcc6", // 10
-      "#a0fff0", // 11
-      "#84a594", // 12
-      "#cfd3af", // 13
-      "#fff2d1", // 14
-      "#ffd9ae", // 15
-      "#ffa582", // 16
-      "#ff807e", // 17
-      "#ff5470", // 18
-      "#985868", // 19
-      "#b78482", // 20
-      "#dda49f", // 21
-      "#e0bdc1", // 22
-      "#7789ef", // 23
-      "#5ec1ff", // 24
-      "#bae6ff", // 25
-      "#e2d3ff", // 26
-      "#be9bff", // 27
-      "#9968e2", // 28
-      "#ff9bb6", // 29
-      "#ffccdc", // 30
-      "#ffeaf6", // 31
-    ];
-
-    // 6 referenced colors (0-5) + accents (6-8)
-    const COLORPALETTESTUDIO = [
-      "#eda381", // 0: peachglitch (sun, roadLines, lights)
-      "#ed4bbc", // 1: virtualrose (ground)
-      "#55efd5", // 2: neonaqua (signs)
-      "#c6f5f2", // 3: cybermist (obstacles)
-      "#8207db", // 4: cyberplum (car)
-      "#f5d8f2", // 5: dreampink (default/wireframe)
-      "#2f2556", // 6: bg
-      "#584c84", // 7: pixelGrid
-      "#cecff0", // 8: mountains
-    ];
-
-    // 6 referenced colors (0-5) + accents (6-7)
-    const SCHEMECOLOR = [
-      "#300350", // 0: dark blue / purple (bg)
-      "#94167f", // 1: magenta (signs)
-      "#e93479", // 2: red/pink (obstacles)
-      "#f9ac53", // 3: orange/yellow (sun, roadLines, lights)
-      "#f62e97", // 4: neon pink (ground)
-      "#153cb4", // 5: blue (car, mountains)
-      "#584c84", // 6: pixelGrid
-      "#ffffff", // 7: default/wireframe
-    ];
-
-    // --- PALETTE DEFINITIONS WITH INDEX MAPPINGS ---
-
-    const PALETTES = [
-      {
-        name: "Vaporsthetic",
-        colors: VAPORSTHETIC,
-        indices: {
-          default: 0,
-          mountains: 1,
-          ground: 4,
-          obstacles: 6,
-          lights: 7,
-          roadLines: 8,
-          sun: 9,
-          signs: 12,
-          car: 15,
-          pixelGrid: 18,
-          bg: 19,
-        },
-      },
-      {
-        name: "Original",
-        colors: ORIGINALPALETTE,
-        indices: {
-          bg: 0,
-          pixelGrid: 1,
-          sun: 2,
-          mountains: 3,
-          ground: 4,
-          roadLines: 5,
-          lights: 6,
-          signs: 7,
-          obstacles: 8,
-          default: 9,
-          car: 10,
-        },
-      },
-      {
-        name: "Pastel Horizon",
-        colors: PASTELHORIZONPLUS,
-        indices: {
-          bg: 0,
-          pixelGrid: 1,
-          mountains: 4,
-          default: 5,
-          signs: 8,
-          lights: 14,
-          roadLines: 15,
-          sun: 16,
-          obstacles: 18,
-          car: 23,
-          ground: 28,
-        },
-      },
-      {
-        name: "Color Palette Studio",
-        colors: COLORPALETTESTUDIO,
-        indices: {
-          sun: 0,
-          roadLines: 0,
-          lights: 0,
-          ground: 1,
-          signs: 2,
-          obstacles: 3,
-          car: 4,
-          default: 5,
-          bg: 6,
-          pixelGrid: 7,
-          mountains: 8,
-        },
-      },
-      {
-        name: "Scheme Color",
-        colors: SCHEMECOLOR,
-        indices: {
-          bg: 0,
-          signs: 1,
-          obstacles: 2,
-          sun: 3,
-          roadLines: 3,
-          lights: 3,
-          ground: 4,
-          car: 5,
-          mountains: 5,
-          pixelGrid: 6,
-          default: 7,
-        },
-      },
-    ];
-
-    //old palettes
-
-    const oldPALETTE = {
-      bg: "#050530", // dark blue
-      sun: "orange",
-      mountains: "lightgray",
-      ground: "orchid",
-      roadLines: "yellow",
-      lights: "yellow",
-      signs: "green",
-      obstacles: "red",
-      pixelGrid: "midnightblue", // slightly less dark blue
-      car: "blue",
-      default: "white",
-    };
-
-    const vaporsthetic = {
-      bg: "#482254", // dark purple
-      sun: "#ff8370", // orange
-      mountains: "#f5c9eb", // light pink
-      ground: "#fb6cff", // hot pink
-      roadLines: "#ffd08a", // light yellow
-      lights: "#feffbe", //orange-yellow
-      signs: "#83ded2", // green
-      obstacles: "#ff4aa7", //hot pink
-      pixelGrid: "#6a1483", //darkish purple
-      car: "#a453f5", //purple
-      default: "#ffe0f7", //very light pink
-    };
-
-    const pastelhorizon = {
-      bg: "#2f2556", // dark blue
-      sun: "#ffa582", // orange
-      mountains: "#cecff0", // lightish blue grey
-      ground: "#9968e2", // pastel purple
-      roadLines: "#ffd9ae", // desaturated yellow
-      lights: "#fff2d1", // light desaturated yellow
-      signs: "#34ada1", // green
-      obstacles: "#ff5470", // red
-      pixelGrid: "#584c84", // darkish blue grey
-      car: "#7789ef", // blue
-      default: "#ffffff", //white
-    };
-
-    const colorpalettestudio = {
-      bg: "#2f2556", // dark blue
-      sun: "#eda381", // orange "peachglitch"
-      mountains: "#cecff0", // lightish blue grey
-      ground: "#ed4bbc", // hotpink "virtualrose"
-      roadLines: "#eda381", // "peachglitch"
-      lights: "#eda381", // "peachglitch"
-      signs: "#55efd5", // aqua "neonaqua"
-      obstacles: "#c6f5f2", // "cybermist"
-      pixelGrid: "#584c84", // darkish blue grey
-      car: "#8207db", // "cyberplum"
-      default: "#f5d8f2", // "dreampink"
-    };
-
-    const schemecolor = {
-      bg: "#300350", // dark blue 1
-      sun: "#f9ac53", // orange 4
-      mountains: "#153cb4", // lightish blue grey
-      ground: "#f62e97", // pastel purple 5
-      roadLines: "#f9ac53", // desaturated yellow 4
-      lights: "#f9ac53", // light desaturated yellow 4
-      signs: "#94167f", // green 2
-      obstacles: "#e93479", // red 3
-      pixelGrid: "#584c84", // darkish blue grey
-      car: "#153cb4", // blue 6
-      default: "#ffffff", //white
-    };
-
-    let oldcarColors = [
-      //PALETTE.car,
-      "red",
-      "green",
-      "yellow",
-      "orange",
-      "purple",
-      "pink",
-      "brown",
-      "gray",
-    ];
-
-    const PALETTE = {};
-    let currentPaletteIndex = 0;
-    let carColors = [];
-    let colorIndex = 0;
-
-    function loadPalette(index) {
-      currentPaletteIndex = (index + PALETTES.length) % PALETTES.length;
-      const def = PALETTES[currentPaletteIndex];
-
-      for (const [role, idx] of Object.entries(def.indices)) {
-        PALETTE[role] = def.colors[idx];
-      }
-
-      const availableColors = def.colors.filter(
-        (color) => color !== PALETTE.bg && color !== PALETTE.default,
-      );
-      const uniqueCarColors = [...new Set(availableColors)];
-
-      if (uniqueCarColors.includes(PALETTE.car)) {
-        carColors = [
-          PALETTE.car,
-          ...uniqueCarColors.filter((c) => c !== PALETTE.car),
-        ];
-      } else {
-        carColors = uniqueCarColors;
-      }
-
-      colorIndex = 0;
-
-      // --- Update HUD Styling & Swatches ---
-      const hud = document.getElementById("paletteHUD");
-      const title = document.getElementById("paletteTitle");
-      const swatches = document.getElementById("paletteSwatches");
-
-      if (title) {
-        title.textContent = def.name;
-        title.style.color = PALETTE.default; // Color title with palette's default wireframe color
-      }
-
-      if (hud) {
-        // Subtle glow using PALETTE.default
-        hud.style.borderColor = PALETTE.default;
-        hud.style.boxShadow = `0 4px 20px ${PALETTE.default}33`;
-      }
-
-      if (swatches) {
-        // Pull the prominent scene colors (ignoring background so it stays legible)
-        const keyRoles = [
-          "bg",
-          "pixelGrid",
-          "sun",
-          "roadLines",
-          "lights",
-          "mountains",
-          "obstacles",
-          "signs",
-          "car",
-          "ground",
-        ];
-        const mainColors = [
-          ...new Set(keyRoles.map((r) => PALETTE[r]).filter(Boolean)),
+        const ORIGINALPALETTE = [
+            "#050530", // 0: bg
+            "midnightblue", // 1: pixelGrid
+            "orange", // 2: sun
+            "lightgray", // 3: mountains
+            "orchid", // 4: ground
+            "yellow", // 5: roadLines
+            "yellow", // 6: lights
+            "green", // 7: signs
+            "red", // 8: obstacles
+            "white", // 9: default (wireframe)
+            // Car colors:
+            "blue", // 10
+            "red", // 11
+            "green", // 12
+            "yellow", // 13
+            "orange", // 14
+            "purple", // 15
+            "pink", // 16
+            "brown", // 17
+            "gray", // 18
         ];
 
-        swatches.innerHTML = mainColors
-          .map(
-            (c) => `
+        const VAPORSTHETIC = [
+            "#ffe0f7", // 0
+            "#f5c9eb", // 1
+            "#f5c1e5", // 2
+            "#fc92fa", // 3
+            "#fb6cff", // 4
+            "#ff7dcb", // 5
+            "#ff4aa7", // 6
+            "#feffbe", // 7
+            "#ffd08a", // 8
+            "#ff8370", // 9
+            "#cbffe6", // 10
+            "#83ded2", // 11
+            "#66b9c1", // 12
+            "#afe9ff", // 13
+            "#94c4ff", // 14
+            "#8f8cf3", // 15
+            "#a453f5", // 16
+            "#764ead", // 17
+            "#6a1483", // 18
+            "#482254", // 19
+        ];
+
+        const PASTELHORIZONPLUS = [
+            "#2f2556", // 0
+            "#584c84", // 1
+            "#827caf", // 2
+            "#aeabd3", // 3
+            "#cecff0", // 4
+            "#ffffff", // 5
+            "#c9ffbf", // 6
+            "#78d8b7", // 7
+            "#34ada1", // 8
+            "#257d9b", // 9
+            "#25bcc6", // 10
+            "#a0fff0", // 11
+            "#84a594", // 12
+            "#cfd3af", // 13
+            "#fff2d1", // 14
+            "#ffd9ae", // 15
+            "#ffa582", // 16
+            "#ff807e", // 17
+            "#ff5470", // 18
+            "#985868", // 19
+            "#b78482", // 20
+            "#dda49f", // 21
+            "#e0bdc1", // 22
+            "#7789ef", // 23
+            "#5ec1ff", // 24
+            "#bae6ff", // 25
+            "#e2d3ff", // 26
+            "#be9bff", // 27
+            "#9968e2", // 28
+            "#ff9bb6", // 29
+            "#ffccdc", // 30
+            "#ffeaf6", // 31
+        ];
+
+        // 6 referenced colors (0-5) + accents (6-8)
+        const COLORPALETTESTUDIO = [
+            "#eda381", // 0: peachglitch (sun, roadLines, lights)
+            "#ed4bbc", // 1: virtualrose (ground)
+            "#55efd5", // 2: neonaqua (signs)
+            "#c6f5f2", // 3: cybermist (obstacles)
+            "#8207db", // 4: cyberplum (car)
+            "#f5d8f2", // 5: dreampink (default/wireframe)
+            "#2f2556", // 6: bg
+            "#584c84", // 7: pixelGrid
+            "#cecff0", // 8: mountains
+        ];
+
+        // 6 referenced colors (0-5) + accents (6-7)
+        const SCHEMECOLOR = [
+            "#300350", // 0: dark blue / purple (bg)
+            "#94167f", // 1: magenta (signs)
+            "#e93479", // 2: red/pink (obstacles)
+            "#f9ac53", // 3: orange/yellow (sun, roadLines, lights)
+            "#f62e97", // 4: neon pink (ground)
+            "#153cb4", // 5: blue (car, mountains)
+            "#584c84", // 6: pixelGrid
+            "#ffffff", // 7: default/wireframe
+        ];
+
+        // --- PALETTE DEFINITIONS WITH INDEX MAPPINGS ---------------
+
+        const PALETTES = [
+            {
+                name: "Vaporsthetic",
+                colors: VAPORSTHETIC,
+                indices: {
+                    default: 0,
+                    mountains: 1,
+                    ground: 4,
+                    obstacles: 6,
+                    lights: 7,
+                    roadLines: 8,
+                    sun: 9,
+                    signs: 12,
+                    car: 15,
+                    pixelGrid: 18,
+                    bg: 19,
+                },
+            },
+            {
+                name: "Original",
+                colors: ORIGINALPALETTE,
+                indices: {
+                    bg: 0,
+                    pixelGrid: 1,
+                    sun: 2,
+                    mountains: 3,
+                    ground: 4,
+                    roadLines: 5,
+                    lights: 6,
+                    signs: 7,
+                    obstacles: 8,
+                    default: 9,
+                    car: 10,
+                },
+            },
+            {
+                name: "Pastel Horizon",
+                colors: PASTELHORIZONPLUS,
+                indices: {
+                    bg: 0,
+                    pixelGrid: 1,
+                    mountains: 4,
+                    default: 5,
+                    signs: 8,
+                    lights: 14,
+                    roadLines: 15,
+                    sun: 16,
+                    obstacles: 18,
+                    car: 23,
+                    ground: 28,
+                },
+            },
+            {
+                name: "Color Palette Studio",
+                colors: COLORPALETTESTUDIO,
+                indices: {
+                    sun: 0,
+                    roadLines: 0,
+                    lights: 0,
+                    ground: 1,
+                    signs: 2,
+                    obstacles: 3,
+                    car: 4,
+                    default: 5,
+                    bg: 6,
+                    pixelGrid: 7,
+                    mountains: 8,
+                },
+            },
+            {
+                name: "Scheme Color",
+                colors: SCHEMECOLOR,
+                indices: {
+                    bg: 0,
+                    signs: 1,
+                    obstacles: 2,
+                    sun: 3,
+                    roadLines: 3,
+                    lights: 3,
+                    ground: 4,
+                    car: 5,
+                    mountains: 5,
+                    pixelGrid: 6,
+                    default: 7,
+                },
+            },
+        ];
+
+        // --- Loading Palettes --------------------------------------
+
+        const PALETTE = {};
+        let currentPaletteIndex = 0;
+        let carColors = [];
+        let colorIndex = 0;
+
+        function loadPalette(index) {
+            currentPaletteIndex = (index + PALETTES.length) % PALETTES.length;
+            const def = PALETTES[currentPaletteIndex];
+
+            for (const [role, idx] of Object.entries(def.indices)) {
+                PALETTE[role] = def.colors[idx];
+            }
+
+            const availableColors = def.colors.filter(
+                (color) => color !== PALETTE.bg && color !== PALETTE.default,
+            );
+            const uniqueCarColors = [...new Set(availableColors)];
+
+            if (uniqueCarColors.includes(PALETTE.car)) {
+                carColors = [
+                    PALETTE.car,
+                    ...uniqueCarColors.filter((c) => c !== PALETTE.car),
+                ];
+            } else {
+                carColors = uniqueCarColors;
+            }
+
+            colorIndex = 0;
+
+            // --- Update HUD Styling & Swatches ---
+            const hud = document.getElementById("paletteHUD");
+            const title = document.getElementById("paletteTitle");
+            const swatches = document.getElementById("paletteSwatches");
+
+            if (title) {
+                title.textContent = def.name;
+                title.style.color = PALETTE.default; // Color title with palette's default wireframe color
+            }
+
+            if (hud) {
+                // Subtle glow using PALETTE.default
+                hud.style.borderColor = PALETTE.default;
+                hud.style.boxShadow = `0 4px 20px ${PALETTE.default}33`;
+            }
+
+            if (swatches) {
+                // Pull the prominent scene colors (ignoring background so it stays legible)
+                const keyRoles = [
+                    "bg",
+                    "pixelGrid",
+                    "sun",
+                    "roadLines",
+                    "lights",
+                    "mountains",
+                    "obstacles",
+                    "signs",
+                    "car",
+                    "ground",
+                ];
+                const mainColors = [
+                    ...new Set(keyRoles.map((r) => PALETTE[r]).filter(Boolean)),
+                ];
+
+                swatches.innerHTML = mainColors
+                    .map(
+                        (c) => `
                     <span
                       title="${c}"
                       style="
@@ -677,1097 +617,1117 @@
                         box-shadow: 0 1px 4px rgba(0,0,0,0.5);
                       ">
                     </span>`,
-          )
-          .join("");
-      }
-    }
-
-    loadPalette(0);
-
-    function applyPalette(index) {
-      loadPalette(index);
-      mountains.forEach((m) => {
-        m.color = PALETTE.mountains;
-      });
-      sun.color = PALETTE.sun;
-      car.color = carColors[colorIndex];
-    }
-
-    function togglePalette() {
-      applyPalette(currentPaletteIndex + 1);
-    }
-
-    //let colorIndex = 0;
-    const rows = 200;
-    const cols = 320;
-    const pixelGrid = Array.from({ length: cols }, () =>
-      Array(rows).fill({ color: PALETTE.bg, depth: Infinity }),
-    );
-    let seePixelGrid = false;
-    let showFacesWireframe = false;
-
-    // for keyboard controls
-    const keys = {};
-
-    let horizon = { z: 5000 };
-
-    const defaultCarPosition = Object.freeze({ x: 0, y: 1, z: 10 });
-    const defaultCameraPosition = Object.freeze({ x: 0, y: 10, z: -25 });
-
-    // wireframe, rasterEdges, rasterFaces
-    let mode = localStorage.getItem("mode") || "wireframe";
-
-    // for html buttons
-    // input modes: wireframe, rasterEdges, rasterFaces
-    function setMode(newMode) {
-      mode = newMode;
-      localStorage.setItem("mode", newMode);
-    }
-
-    function toggleWireframe() {
-      showFacesWireframe = !showFacesWireframe;
-    }
-
-    function togglePixelGrid() {
-      seePixelGrid = !seePixelGrid;
-    }
-
-    // represents imagined z position, camera.z never actually changes
-    let relativeOffset = 0;
-    let linesInterval = 50; // floor grid size
-
-    let roadWidth = 20;
-    let roadLineInterval = 30;
-    let roadLineLength = 5;
-
-    let meshInterval = 100; // for repeating meshes along road
-    let meshLimit = 5000;
-    let numLightMeshes = meshLimit / meshInterval;
-
-    let camera = { ...defaultCameraPosition };
-    let camLimits = { miny: 1, maxy: 30 };
-    let clipStart = 0.5;
-    let fov = 1.5;
-
-    let speed = 100;
-
-    let scales = [];
-    for (let i = 0; i < numLightMeshes; i++) {
-      scales.push(randomRange(0.8, 1.2));
-    }
-
-    // MESHES
-
-    // MESHES
-
-    let carMesh = {
-      vertices: [
-        // --- Lower Chassis (0 - 7) ---
-        { x: -1.0, y: -0.4, z: -3.2 }, // 0: rear-left-bot
-        { x: -1.0, y: 0.2, z: -3.2 }, // 1: rear-left-top
-        { x: -1.0, y: -0.4, z: 3.2 }, // 2: front-left-bot
-        { x: -1.0, y: 0.2, z: 3.2 }, // 3: front-left-top
-        { x: 1.0, y: -0.4, z: -3.2 }, // 4: rear-right-bot
-        { x: 1.0, y: 0.2, z: -3.2 }, // 5: rear-right-top
-        { x: 1.0, y: -0.4, z: 3.2 }, // 6: front-right-bot
-        { x: 1.0, y: 0.2, z: 3.2 }, // 7: front-right-top
-
-        // --- Cabin / Greenhouse (8 - 15) ---
-        { x: -0.75, y: 0.2, z: -1.2 }, // 8:  cabin-rear-left-bot
-        { x: 0.75, y: 0.2, z: -1.2 }, // 9:  cabin-rear-right-bot
-        { x: -0.75, y: 0.9, z: -0.5 }, // 10: roof-rear-left
-        { x: 0.75, y: 0.9, z: -0.5 }, // 11: roof-rear-right
-        { x: -0.75, y: 0.9, z: 0.7 }, // 12: roof-front-left
-        { x: 0.75, y: 0.9, z: 0.7 }, // 13: roof-front-right
-        { x: -0.75, y: 0.2, z: 1.4 }, // 14: cabin-front-left-bot
-        { x: 0.75, y: 0.2, z: 1.4 }, // 15: cabin-front-right-bot
-
-        // --- Rear-Left Wheel (16 - 23) ---
-        { x: -1.25, y: -1.0, z: -2.5 }, // 16: back-bot-out
-        { x: -0.95, y: -1.0, z: -2.5 }, // 17: back-bot-in
-        { x: -0.95, y: -0.2, z: -2.5 }, // 18: back-top-in
-        { x: -1.25, y: -0.2, z: -2.5 }, // 19: back-top-out
-        { x: -1.25, y: -1.0, z: -1.5 }, // 20: front-bot-out
-        { x: -0.95, y: -1.0, z: -1.5 }, // 21: front-bot-in
-        { x: -0.95, y: -0.2, z: -1.5 }, // 22: front-top-in
-        { x: -1.25, y: -0.2, z: -1.5 }, // 23: front-top-out
-
-        // --- Rear-Right Wheel (24 - 31) ---
-        { x: 0.95, y: -1.0, z: -2.5 }, // 24: back-bot-in
-        { x: 1.25, y: -1.0, z: -2.5 }, // 25: back-bot-out
-        { x: 1.25, y: -0.2, z: -2.5 }, // 26: back-top-out
-        { x: 0.95, y: -0.2, z: -2.5 }, // 27: back-top-in
-        { x: 0.95, y: -1.0, z: -1.5 }, // 28: front-bot-in
-        { x: 1.25, y: -1.0, z: -1.5 }, // 29: front-bot-out
-        { x: 1.25, y: -0.2, z: -1.5 }, // 30: front-top-out
-        { x: 0.95, y: -0.2, z: -1.5 }, // 31: front-top-in
-
-        // --- Front-Left Wheel (32 - 39) ---
-        { x: -1.25, y: -1.0, z: 1.5 }, // 32
-        { x: -0.95, y: -1.0, z: 1.5 }, // 33
-        { x: -0.95, y: -0.2, z: 1.5 }, // 34
-        { x: -1.25, y: -0.2, z: 1.5 }, // 35
-        { x: -1.25, y: -1.0, z: 2.5 }, // 36
-        { x: -0.95, y: -1.0, z: 2.5 }, // 37
-        { x: -0.95, y: -0.2, z: 2.5 }, // 38
-        { x: -1.25, y: -0.2, z: 2.5 }, // 39
-
-        // --- Front-Right Wheel (40 - 47) ---
-        { x: 0.95, y: -1.0, z: 1.5 }, // 40
-        { x: 1.25, y: -1.0, z: 1.5 }, // 41
-        { x: 1.25, y: -0.2, z: 1.5 }, // 42
-        { x: 0.95, y: -0.2, z: 1.5 }, // 43
-        { x: 0.95, y: -1.0, z: 2.5 }, // 44
-        { x: 1.25, y: -1.0, z: 2.5 }, // 45
-        { x: 1.25, y: -0.2, z: 2.5 }, // 46
-        { x: 0.95, y: -0.2, z: 2.5 }, // 47
-      ],
-      faces: [
-        // Chassis Panels
-        [0, 4, 5, 1], // Rear bumper
-        [6, 2, 3, 7], // Front bumper
-        [0, 1, 3, 2], // Left lower side
-        [4, 6, 7, 5], // Right lower side
-        [0, 2, 6, 4], // Underside (ground clearance)
-        [1, 5, 7, 3], // Body deck (trunk & hood)
-
-        // Cabin Panels
-        [8, 9, 11, 10], // Rear window (sloped)
-        [10, 11, 13, 12], // Roof
-        [12, 13, 15, 14], // Windshield (sloped)
-        [8, 10, 12, 14], // Left side window
-        [9, 15, 13, 11], // Right side window
-
-        // Rear-Left Wheel
-        [16, 17, 18, 19],
-        [20, 23, 22, 21],
-        [16, 20, 21, 17],
-        [19, 18, 22, 23],
-        [16, 19, 23, 20],
-        [17, 21, 22, 18],
-
-        // Rear-Right Wheel
-        [24, 25, 26, 27],
-        [28, 31, 30, 29],
-        [24, 28, 29, 25],
-        [27, 26, 30, 31],
-        [24, 27, 31, 28],
-        [25, 29, 30, 26],
-
-        // Front-Left Wheel
-        [32, 33, 34, 35],
-        [36, 39, 38, 37],
-        [32, 36, 37, 33],
-        [35, 34, 38, 39],
-        [32, 35, 39, 36],
-        [33, 37, 38, 34],
-
-        // Front-Right Wheel
-        [40, 41, 42, 43],
-        [44, 47, 46, 45],
-        [40, 44, 45, 41],
-        [43, 42, 46, 47],
-        [40, 43, 47, 44],
-        [41, 45, 46, 42],
-      ],
-    };
-
-    let cylinderMesh = {
-      vertices: [
-        // Top circle (y = 1)
-        { x: 1, y: 1, z: 0 }, // 0
-        { x: 0.71, y: 1, z: 0.71 }, // 1
-        { x: 0, y: 1, z: 1 }, // 2
-        { x: -0.71, y: 1, z: 0.71 }, // 3
-        { x: -1, y: 1, z: 0 }, // 4
-        { x: -0.71, y: 1, z: -0.71 }, // 5
-        { x: 0, y: 1, z: -1 }, // 6
-        { x: 0.71, y: 1, z: -0.71 }, // 7
-
-        // Bottom circle (y = -1)
-        { x: 1, y: -1, z: 0 }, // 8
-        { x: 0.71, y: -1, z: 0.71 }, // 9
-        { x: 0, y: -1, z: 1 }, // 10
-        { x: -0.71, y: -1, z: 0.71 }, // 11
-        { x: -1, y: -1, z: 0 }, // 12
-        { x: -0.71, y: -1, z: -0.71 }, // 13
-        { x: 0, y: -1, z: -1 }, // 14
-        { x: 0.71, y: -1, z: -0.71 }, // 15
-
-        // Centers
-        { x: 0, y: 1, z: 0 }, // 16: Top Center
-        { x: 0, y: -1, z: 0 }, // 17: Bottom Center
-      ],
-      faces: [
-        // 8 Side Quads
-        [0, 1, 9, 8],
-        [1, 2, 10, 9],
-        [2, 3, 11, 10],
-        [3, 4, 12, 11],
-        [4, 5, 13, 12],
-        [5, 6, 14, 13],
-        [6, 7, 15, 14],
-        [7, 0, 8, 15],
-
-        // Top Cap (Fan from center 16)
-        [16, 0, 1],
-        [16, 1, 2],
-        [16, 2, 3],
-        [16, 3, 4],
-        [16, 4, 5],
-        [16, 5, 6],
-        [16, 6, 7],
-        [16, 7, 0],
-
-        // Bottom Cap (Fan from center 17)
-        [17, 9, 8],
-        [17, 10, 9],
-        [17, 11, 10],
-        [17, 12, 11],
-        [17, 13, 12],
-        [17, 14, 13],
-        [17, 15, 14],
-        [17, 8, 15],
-      ],
-    };
-
-    let cubeMesh = {
-      vertices: [
-        { x: -1, y: -1, z: 1 }, // A, idx 0
-        { x: -1, y: 1, z: 1 }, // B, idx 1
-        { x: -1, y: -1, z: -1 }, // C, idx 2
-        { x: -1, y: 1, z: -1 }, // D, idx 3
-        { x: 1, y: -1, z: 1 }, // E, idx 4
-        { x: 1, y: 1, z: 1 }, // F, idx 5
-        { x: 1, y: -1, z: -1 }, // G, idx 6
-        { x: 1, y: 1, z: -1 }, // H, idx 7
-      ],
-      faces: [
-        [0, 1, 3, 2],
-        [2, 3, 7, 6],
-        [6, 7, 5, 4],
-        [4, 5, 1, 0],
-        [2, 6, 4, 0],
-        [7, 3, 1, 5],
-      ],
-    };
-
-    let signMesh = {
-      vertices: [
-        { x: 0, y: 0, z: 0 }, //origin
-        { x: 0, y: 12, z: 0 }, //
-        { x: -4, y: 12, z: 0 },
-        { x: -6, y: 12, z: 0 },
-        { x: -4, y: 10, z: 0 },
-        { x: -6, y: 10, z: 0 },
-        { x: -8, y: 12, z: 0 },
-        { x: -8, y: 10, z: 0 },
-        { x: -2, y: 10, z: 0 },
-        { x: -8, y: 7, z: 0 },
-        { x: -2, y: 7, z: 0 },
-      ],
-      faces: [
-        [0, 1],
-        [1, 6],
-        [2, 4],
-        [3, 5],
-        [7, 8, 10, 9],
-      ],
-    };
-
-    let lightMesh = {
-      vertices: [
-        { x: 0, y: 0, z: 0 }, //origin
-        { x: 0, y: 8, z: 0 }, //
-        { x: 6, y: 8, z: 0 },
-        { x: 6, y: 7, z: 0 },
-        { x: 4, y: 7, z: 0 },
-        { x: 4, y: 8, z: 0 },
-      ],
-      faces: [
-        [0, 1],
-        [1, 2],
-        [2, 3, 4, 5],
-      ],
-    };
-
-    let sunMesh = {
-      vertices: [
-        { x: 0, y: 0, z: 0 }, // 1: Origin / Center
-        { x: 1, y: 0, z: 0 }, // 2: 0°
-        { x: 0.87, y: 0.5, z: 0 }, // 3: 30°
-        { x: 0.5, y: 0.87, z: 0 }, // 4: 60°
-        { x: 0, y: 1, z: 0 }, // 5: 90°
-        { x: -0.5, y: 0.87, z: 0 }, // 6: 120°
-        { x: -0.87, y: 0.5, z: 0 }, // 7: 150°
-        { x: -1, y: 0, z: 0 }, // 8: 180°
-        { x: -0.87, y: -0.5, z: 0 }, // 9: 210°
-        { x: -0.5, y: -0.87, z: 0 }, // 10: 240°
-        { x: 0, y: -1, z: 0 }, // 11: 270°
-        { x: 0.5, y: -0.87, z: 0 }, // 12: 300°
-        { x: 0.87, y: -0.5, z: 0 }, // 13: 330°
-      ],
-      faces: [
-        [0, 1, 2],
-        [0, 2, 3],
-        [0, 3, 4],
-        [0, 4, 5],
-        [0, 5, 6],
-        [0, 6, 7],
-        [0, 7, 8],
-        [0, 8, 9],
-        [0, 9, 10],
-        [0, 10, 11],
-        [0, 11, 12],
-        [0, 12, 1], // Closes back to vertex 2
-      ],
-    };
-
-    // INSTANCES
-
-    let mountains = [];
-    for (let x = -7500; x < 7500; x += randomRange(1000, 2000)) {
-      if (Math.abs(x) < 700) continue;
-
-      let xScale = randomRange(0.5, 1);
-      let yScale = randomRange(1000, 3000);
-      let z = horizon.z + 10;
-
-      let tri = [
-        { x: -xScale, y: 0, z: 0 },
-        { x: xScale, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 },
-      ];
-
-      let mountain = {
-        mesh: {
-          vertices: tri,
-          faces: [[0, 1, 2]],
-        },
-        position: { x: x, y: 0, z: z },
-        scale: yScale,
-        color: PALETTE.mountains,
-      };
-      mountains.push(mountain);
-    }
-
-    // define objects with mesh (vertices, faces), position, scale, color
-    // signs and lights are procedurally instanced
-    let car = {
-      mesh: carMesh,
-      position: { ...defaultCarPosition },
-      scale: 1,
-      color: carColors[0],
-    };
-    let sun = {
-      mesh: sunMesh,
-      position: { x: 0, y: 2000, z: horizon.z + 100 },
-      scale: 1000,
-      color: PALETTE.sun,
-    };
-
-    // visual representation of the movement bounds, currently unused because removed z bounds
-    let bounds = {
-      mesh: {
-        vertices: [
-          { x: -roadWidth / 2, y: 0, z: 0 },
-          { x: roadWidth / 2, y: 0, z: 0 },
-          { x: roadWidth / 2, y: 0, z: roadWidth },
-          { x: -roadWidth / 2, y: 0, z: roadWidth },
-        ],
-        faces: [[0, 1, 2, 3]],
-      },
-      position: { x: 0, y: 0, z: 0 },
-      scale: 1,
-      color: PALETTE.default,
-    };
-
-    // FUNCTIONS
-    // HELPER FUNCTIONS
-
-    function randomRange(min, max) {
-      return Math.random() * (max - min) + min;
-    }
-
-    // input: 2d {u, v} verts , in correct winding order
-    function signedArea2DTri(p1, p2, p3) {
-      return (
-        ((p2.u - p1.u) * (p3.v - p1.v) - (p3.u - p1.u) * (p2.v - p1.v)) / 2
-      );
-    }
-
-    // Creates a quad from two edge vertices by offsetting edge by the normal vector
-    // of the plane made by view vector and edge vector
-    // input: {x, y, z} verts in world space
-    // output: [vert1, vert2, vert3, vert4], where verts are {x,y,z}
-    function createQuadFromEdge(vert1, vert2) {
-      // calculate normal vector of the plane made by view vector and edge vector
-      let edge = {
-        x: vert2.x - vert1.x,
-        y: vert2.y - vert1.y,
-        z: vert2.z - vert1.z,
-      };
-      let view = { x: 0, y: 0, z: 1 };
-      let normal = {
-        x: edge.y * view.z - edge.z * view.y,
-        y: edge.z * view.x - edge.x * view.z,
-        z: edge.x * view.y - edge.y * view.x,
-      };
-      let normalized = {
-        x:
-          normal.x /
-          Math.sqrt(
-            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
-          ),
-        y:
-          normal.y /
-          Math.sqrt(
-            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
-          ),
-        z:
-          normal.z /
-          Math.sqrt(
-            normal.x * normal.x + normal.y * normal.y + normal.z * normal.z,
-          ),
-      };
-
-      // offset verts along normal
-      let width = 1.0; // extremely wide because thin lines don't draw at distance
-      let newvert1 = {
-        x: vert1.x - (normalized.x * width) / 2,
-        y: vert1.y - (normalized.y * width) / 2,
-        z: vert1.z - (normalized.z * width) / 2,
-      };
-      let newvert2 = {
-        x: vert2.x - (normalized.x * width) / 2,
-        y: vert2.y - (normalized.y * width) / 2,
-        z: vert2.z - (normalized.z * width) / 2,
-      };
-      let newvert3 = {
-        x: vert1.x + (normalized.x * width) / 2,
-        y: vert1.y + (normalized.y * width) / 2,
-        z: vert1.z + (normalized.z * width) / 2,
-      };
-      let newvert4 = {
-        x: vert2.x + (normalized.x * width) / 2,
-        y: vert2.y + (normalized.y * width) / 2,
-        z: vert2.z + (normalized.z * width) / 2,
-      };
-      return [newvert1, newvert2, newvert4, newvert3];
-    }
-
-    // TRANSFORMATIONS
-
-    // inputs: takes mesh vertices, and object position/scale
-    // returns: screen space {u,v,z} for a given mesh vertex
-    // that is: the pixel coordinates on the canvas in wireframe mode and the
-    // simulated pixel coordinate in raster mode, plus depth
-    // NOTE: grabs camera and its properties from globals
-    function getUV(
-      vert,
-      object = { position: { x: 0, y: 0, z: 0 }, scale: 1 },
-    ) {
-      let camVert = getCameraRelativeCoords(
-        vert,
-        object.scale,
-        object.position,
-        camera,
-      );
-
-      if (camVert.z <= clipStart) return null;
-
-      // get pinhole projection uv coordinates
-      let u = camVert.x / camVert.z;
-      let v = camVert.y / camVert.z;
-
-      // get and return screen-space coordinates
-      let screenUV = getScreenUV(u, v, camVert.z);
-      return screenUV;
-    }
-
-    // coords = {x, y, z}, returns {x,y,z}
-    function getCameraRelativeCoords(coords, scale, position, camera) {
-      return {
-        x: coords.x * scale + position.x - camera.x,
-        y: coords.y * scale + position.y - camera.y,
-        z: coords.z * scale + position.z - camera.z,
-      };
-    }
-
-    // returns {u, v, z}
-    function getScreenUV(u, v, z) {
-      let height =
-        mode === "rasterEdges" || mode === "rasterFaces" ? rows : canvas.height;
-      let width =
-        mode === "rasterEdges" || mode === "rasterFaces" ? cols : canvas.width;
-
-      u = (u * height) / fov + width / 2;
-      v = (v * height) / fov + height / 2;
-      v = height - v;
-
-      return { u, v, z };
-    }
-
-    // DRAWING
-
-    // main draw loop
-    function draw() {
-      ctx.fillStyle = PALETTE.bg;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          pixelGrid[i][j].color = PALETTE.bg;
-          pixelGrid[i][j].depth = Infinity;
-        }
-      }
-
-      // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
-      drawVerticalLines();
-      drawHorizontalLines();
-      drawRoadLines();
-      //drawObject(bounds);
-      drawObject(car);
-      drawRepeatingMeshes();
-      drawObject(sun);
-      drawMountains();
-
-      // simulated screen centers horizontally, top of screen is anchored, if
-      // canvas is exceedingly short relative to simualted screen height (mobile)
-      // start scaling the simualted screen down to preserve experience
-      let scale = 5;
-      if (rows * 5 - 125 > canvas.height) {
-        scale = Math.floor(canvas.height / rows);
-      }
-      const offsetX = Math.floor((canvas.width - cols * scale) / 2);
-
-      if (mode === "rasterEdges" || mode === "rasterFaces") {
-        for (let i = 0; i < cols; i++) {
-          for (let j = 0; j < rows; j++) {
-            ctx.fillStyle = pixelGrid[i][j].color;
-            // drawing rect is expensive so only draw non-background pixels
-            if (ctx.fillStyle != PALETTE.bg) {
-              ctx.fillRect(offsetX + i * scale, j * scale, scale, scale);
+                    )
+                    .join("");
             }
-
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = PALETTE.pixelGrid;
-            if (seePixelGrid) {
-              ctx.strokeRect(offsetX + i * scale, j * scale, scale, scale);
-            }
-          }
-        }
-      }
-    }
-
-    function drawVerticalLines() {
-      // simultaneously draws lines to left and right out from center
-      for (
-        let i = roadWidth / 2;
-        i < roadWidth / 2 + 50 * linesInterval;
-        i += linesInterval
-      ) {
-        //  uv4 | | uv2
-        // uv3       uv1
-        let uv1 = getUV({ x: i, y: 0, z: camera.z + clipStart + 0.1 });
-        let uv2 = getUV({ x: i, y: 0, z: horizon.z });
-        let uv3 = getUV({ x: -i, y: 0, z: camera.z + clipStart + 0.1 });
-        let uv4 = getUV({ x: -i, y: 0, z: horizon.z });
-        if (uv1 === null || uv2 === null || uv3 === null || uv4 === null) break;
-        drawLine(uv1, uv2, PALETTE.ground);
-        drawLine(uv3, uv4, PALETTE.ground);
-        if (uv2.u > (mode === "wireframe" ? canvas.width : cols) - 100) break;
-      }
-    }
-
-    function drawHorizontalLines() {
-      const rightEdge = mode === "wireframe" ? canvas.width : cols;
-
-      // draw horizon line
-      let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: horizon.z });
-      let uv2 = getUV({ x: roadWidth / 2, y: 0, z: horizon.z });
-
-      // if any uv null (behind clip start), skip
-      if (uv1 === null || uv2 === null) return;
-
-      uv1.u = 0;
-      uv2.u = rightEdge;
-
-      drawLine(uv1, uv2, PALETTE.ground);
-
-      // draw horizontal lines, gap in middle for road
-      for (
-        let i = horizon.z - ((relativeOffset + camera.z) % linesInterval);
-        i > camera.z;
-        i -= linesInterval
-      ) {
-        // get road edges
-        let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: i });
-        let uv2 = getUV({ x: roadWidth / 2, y: 0, z: i });
-
-        // if any uv null (behind clip start), skip
-        if (uv1 === null || uv2 === null) continue;
-
-        // draw line from screen edges to road edges
-        drawLine({ ...uv1, u: 0 }, uv1, PALETTE.ground);
-        drawLine(uv2, { ...uv2, u: rightEdge }, PALETTE.ground);
-      }
-    }
-
-    function drawRoadLines() {
-      for (
-        let i = horizon.z - ((relativeOffset + camera.z) % roadLineInterval);
-        i - roadLineLength > camera.z + clipStart;
-        i -= roadLineInterval
-      ) {
-        // keep line bottom within clip start
-        let lineBottomZ = i - roadLineLength;
-        if (lineBottomZ < camera.z + clipStart)
-          lineBottomZ = camera.z + clipStart + 0.1;
-
-        let uv1 = getUV({ x: 0, y: 0, z: i });
-        let uv2 = getUV({ x: 0, y: 0, z: lineBottomZ });
-
-        drawLine(uv1, uv2, PALETTE.roadLines);
-      }
-    }
-
-    // draw repeating light and sign meshes along the road
-    function drawRepeatingMeshes() {
-      for (let i = 0; i < numLightMeshes; i++) {
-        let rawZ = i * meshInterval - ((relativeOffset + camera.z) % meshLimit);
-        let meshWorldZ = rawZ;
-
-        // wrap mesh world z
-        if (meshWorldZ < camera.z) {
-          meshWorldZ += meshLimit;
         }
 
-        let scale = scales[i % scales.length];
+        loadPalette(0);
 
-        let instance = {
-          mesh: lightMesh,
-          position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
-          scale: scale,
-          color: PALETTE.lights,
-        };
-
-        let cubeX =
-          -roadWidth / 4 + ((Math.floor(scale * 100) % 2) * roadWidth) / 2;
-        let cubeZ = meshWorldZ + ((scale * 100) % 20);
-        let normalizedRandom = (scale - 0.8) / (1.2 - 0.8);
-        let cubeScale = normalizedRandom * (4 - 0.5) + 0.5;
-
-        let cube = {
-          mesh: Math.floor(scale * 1000) % 2 === 0 ? cubeMesh : cylinderMesh,
-          position: {
-            x: cubeX,
-            y: cubeScale / 2,
-            z: cubeZ,
-          },
-          scale: cubeScale,
-          color: PALETTE.obstacles,
-        };
-
-        drawObject(cube);
-      }
-      for (let i = 0; i < numLightMeshes; i++) {
-        let rawZ = i * meshInterval - ((relativeOffset + camera.z) % meshLimit);
-        let meshWorldZ = rawZ;
-
-        // wrap mesh world z
-        if (meshWorldZ < camera.z) {
-          meshWorldZ += meshLimit;
+        function applyPalette(index) {
+            loadPalette(index);
+            mountains.forEach((m) => {
+                m.color = PALETTE.mountains;
+            });
+            sun.color = PALETTE.sun;
+            car.color = carColors[colorIndex];
         }
 
-        let scale = scales[i % scales.length];
-
-        let instance = {
-          mesh: lightMesh,
-          position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
-          scale: scale,
-          color: PALETTE.lights,
-        };
-
-        let cubeX =
-          -roadWidth / 4 + ((Math.floor(scale * 100) % 2) * roadWidth) / 2;
-        // let cubeZ = meshWorldZ + ((scale * 100) % 20);
-        let cubeZ = meshWorldZ;
-        let normalizedRandom = (scale - 0.8) / (1.2 - 0.8);
-        let cubeScale = normalizedRandom * (4 - 0.5) + 0.5;
-
-        let cube = {
-          mesh: Math.floor(scale * 1000) % 2 === 0 ? cubeMesh : cylinderMesh,
-          position: {
-            x: cubeX,
-            y: cubeScale / 2,
-            z: cubeZ,
-          },
-          scale: cubeScale,
-          color: PALETTE.obstacles,
-        };
-
-        drawObject(instance);
-      }
-      for (
-        let i =
-          meshLimit -
-          ((relativeOffset + camera.z) % (meshInterval * 4)) -
-          meshInterval / 2;
-        i > camera.z;
-        i -= meshInterval * 4
-      ) {
-        let instance = {
-          mesh: signMesh,
-          position: { x: roadWidth / 2, y: 0, z: i },
-          scale: 1,
-          color: PALETTE.signs,
-        };
-        drawObject(instance);
-      }
-    }
-
-    function drawMountains() {
-      for (let i = 0; i < mountains.length; i++) {
-        drawObject(mountains[i]);
-      }
-    }
-
-    function drawObject(object) {
-      for (let f = 0; f < object.mesh.faces.length; f++) {
-        let face = object.mesh.faces[f];
-
-        if (mode === "wireframe" || mode === "rasterEdges") {
-          for (let v = 0; v < face.length; v++) {
-            let vert1 = object.mesh.vertices[face[v]];
-            let vert2 = object.mesh.vertices[face[(v + 1) % face.length]];
-            let uv1 = getUV(vert1, object);
-            let uv2 = getUV(vert2, object);
-
-            // if uv1 or uv2 are null (behind the camera), skip the line
-            if (uv1 === null || uv2 === null) {
-              continue;
-            }
-
-            drawLine(uv1, uv2, object.color);
-          }
+        function togglePalette() {
+            applyPalette(currentPaletteIndex + 1);
         }
 
-        if (mode === "rasterFaces") {
-          if (face.length === 2) {
-            //edge
-            let quad = createQuadFromEdge(
-              object.mesh.vertices[face[0]],
-              object.mesh.vertices[face[1]],
+        // --- Misc definitions --------------------------------------
+
+        const rows = 200;
+        const cols = 320;
+        const pixelGrid = Array.from({ length: cols }, () =>
+            Array(rows).fill({ color: PALETTE.bg, depth: Infinity }),
+        );
+        let seePixelGrid = false;
+        let showFacesWireframe = false;
+
+        // for keyboard controls
+        const keys = {};
+
+        let horizon = { z: 5000 };
+
+        const defaultCarPosition = Object.freeze({ x: 0, y: 1, z: 10 });
+        const defaultCameraPosition = Object.freeze({ x: 0, y: 10, z: -25 });
+
+        // input modes: wireframe, rasterEdges, rasterFaces
+        let mode = localStorage.getItem("mode") || "wireframe";
+
+        // for html buttons
+        function setMode(newMode) {
+            mode = newMode;
+            localStorage.setItem("mode", newMode);
+        }
+
+        function toggleWireframe() {
+            showFacesWireframe = !showFacesWireframe;
+        }
+
+        function togglePixelGrid() {
+            seePixelGrid = !seePixelGrid;
+        }
+
+        // represents imagined z position, camera.z never actually changes
+        let relativeOffset = 0;
+        let linesInterval = 50; // floor grid size
+
+        let roadWidth = 20;
+        let roadLineInterval = 30;
+        let roadLineLength = 5;
+
+        let meshInterval = 100; // for repeating meshes along road
+        let meshLimit = 5000;
+        let numLightMeshes = meshLimit / meshInterval;
+
+        let camera = { ...defaultCameraPosition };
+        let camLimits = { miny: 1, maxy: 30 };
+        let clipStart = 0.5;
+        let fov = 1.5;
+
+        let speed = 100;
+
+        let scales = [];
+        for (let i = 0; i < numLightMeshes; i++) {
+            scales.push(randomRange(0.8, 1.2));
+        }
+
+        // ===========================================================
+        // 3D OBJECTS
+        // ===========================================================
+
+        // --- Meshes ------------------------------------------------
+
+        let carMesh = {
+            vertices: [
+                // --- Lower Chassis (0 - 7) ---
+                { x: -1.0, y: -0.4, z: -3.2 }, // 0: rear-left-bot
+                { x: -1.0, y: 0.2, z: -3.2 }, // 1: rear-left-top
+                { x: -1.0, y: -0.4, z: 3.2 }, // 2: front-left-bot
+                { x: -1.0, y: 0.2, z: 3.2 }, // 3: front-left-top
+                { x: 1.0, y: -0.4, z: -3.2 }, // 4: rear-right-bot
+                { x: 1.0, y: 0.2, z: -3.2 }, // 5: rear-right-top
+                { x: 1.0, y: -0.4, z: 3.2 }, // 6: front-right-bot
+                { x: 1.0, y: 0.2, z: 3.2 }, // 7: front-right-top
+
+                // --- Cabin / Greenhouse (8 - 15) ---
+                { x: -0.75, y: 0.2, z: -1.2 }, // 8:  cabin-rear-left-bot
+                { x: 0.75, y: 0.2, z: -1.2 }, // 9:  cabin-rear-right-bot
+                { x: -0.75, y: 0.9, z: -0.5 }, // 10: roof-rear-left
+                { x: 0.75, y: 0.9, z: -0.5 }, // 11: roof-rear-right
+                { x: -0.75, y: 0.9, z: 0.7 }, // 12: roof-front-left
+                { x: 0.75, y: 0.9, z: 0.7 }, // 13: roof-front-right
+                { x: -0.75, y: 0.2, z: 1.4 }, // 14: cabin-front-left-bot
+                { x: 0.75, y: 0.2, z: 1.4 }, // 15: cabin-front-right-bot
+
+                // --- Rear-Left Wheel (16 - 23) ---
+                { x: -1.25, y: -1.0, z: -2.5 }, // 16: back-bot-out
+                { x: -0.95, y: -1.0, z: -2.5 }, // 17: back-bot-in
+                { x: -0.95, y: -0.2, z: -2.5 }, // 18: back-top-in
+                { x: -1.25, y: -0.2, z: -2.5 }, // 19: back-top-out
+                { x: -1.25, y: -1.0, z: -1.5 }, // 20: front-bot-out
+                { x: -0.95, y: -1.0, z: -1.5 }, // 21: front-bot-in
+                { x: -0.95, y: -0.2, z: -1.5 }, // 22: front-top-in
+                { x: -1.25, y: -0.2, z: -1.5 }, // 23: front-top-out
+
+                // --- Rear-Right Wheel (24 - 31) ---
+                { x: 0.95, y: -1.0, z: -2.5 }, // 24: back-bot-in
+                { x: 1.25, y: -1.0, z: -2.5 }, // 25: back-bot-out
+                { x: 1.25, y: -0.2, z: -2.5 }, // 26: back-top-out
+                { x: 0.95, y: -0.2, z: -2.5 }, // 27: back-top-in
+                { x: 0.95, y: -1.0, z: -1.5 }, // 28: front-bot-in
+                { x: 1.25, y: -1.0, z: -1.5 }, // 29: front-bot-out
+                { x: 1.25, y: -0.2, z: -1.5 }, // 30: front-top-out
+                { x: 0.95, y: -0.2, z: -1.5 }, // 31: front-top-in
+
+                // --- Front-Left Wheel (32 - 39) ---
+                { x: -1.25, y: -1.0, z: 1.5 }, // 32
+                { x: -0.95, y: -1.0, z: 1.5 }, // 33
+                { x: -0.95, y: -0.2, z: 1.5 }, // 34
+                { x: -1.25, y: -0.2, z: 1.5 }, // 35
+                { x: -1.25, y: -1.0, z: 2.5 }, // 36
+                { x: -0.95, y: -1.0, z: 2.5 }, // 37
+                { x: -0.95, y: -0.2, z: 2.5 }, // 38
+                { x: -1.25, y: -0.2, z: 2.5 }, // 39
+
+                // --- Front-Right Wheel (40 - 47) ---
+                { x: 0.95, y: -1.0, z: 1.5 }, // 40
+                { x: 1.25, y: -1.0, z: 1.5 }, // 41
+                { x: 1.25, y: -0.2, z: 1.5 }, // 42
+                { x: 0.95, y: -0.2, z: 1.5 }, // 43
+                { x: 0.95, y: -1.0, z: 2.5 }, // 44
+                { x: 1.25, y: -1.0, z: 2.5 }, // 45
+                { x: 1.25, y: -0.2, z: 2.5 }, // 46
+                { x: 0.95, y: -0.2, z: 2.5 }, // 47
+            ],
+            faces: [
+                // Chassis Panels
+                [0, 4, 5, 1], // Rear bumper
+                [6, 2, 3, 7], // Front bumper
+                [0, 1, 3, 2], // Left lower side
+                [4, 6, 7, 5], // Right lower side
+                [0, 2, 6, 4], // Underside (ground clearance)
+                [1, 5, 7, 3], // Body deck (trunk & hood)
+
+                // Cabin Panels
+                [8, 9, 11, 10], // Rear window (sloped)
+                [10, 11, 13, 12], // Roof
+                [12, 13, 15, 14], // Windshield (sloped)
+                [8, 10, 12, 14], // Left side window
+                [9, 15, 13, 11], // Right side window
+
+                // Rear-Left Wheel
+                [16, 17, 18, 19],
+                [20, 23, 22, 21],
+                [16, 20, 21, 17],
+                [19, 18, 22, 23],
+                [16, 19, 23, 20],
+                [17, 21, 22, 18],
+
+                // Rear-Right Wheel
+                [24, 25, 26, 27],
+                [28, 31, 30, 29],
+                [24, 28, 29, 25],
+                [27, 26, 30, 31],
+                [24, 27, 31, 28],
+                [25, 29, 30, 26],
+
+                // Front-Left Wheel
+                [32, 33, 34, 35],
+                [36, 39, 38, 37],
+                [32, 36, 37, 33],
+                [35, 34, 38, 39],
+                [32, 35, 39, 36],
+                [33, 37, 38, 34],
+
+                // Front-Right Wheel
+                [40, 41, 42, 43],
+                [44, 47, 46, 45],
+                [40, 44, 45, 41],
+                [43, 42, 46, 47],
+                [40, 43, 47, 44],
+                [41, 45, 46, 42],
+            ],
+        };
+
+        let cylinderMesh = {
+            vertices: [
+                // Top circle (y = 1)
+                { x: 1, y: 1, z: 0 }, // 0
+                { x: 0.71, y: 1, z: 0.71 }, // 1
+                { x: 0, y: 1, z: 1 }, // 2
+                { x: -0.71, y: 1, z: 0.71 }, // 3
+                { x: -1, y: 1, z: 0 }, // 4
+                { x: -0.71, y: 1, z: -0.71 }, // 5
+                { x: 0, y: 1, z: -1 }, // 6
+                { x: 0.71, y: 1, z: -0.71 }, // 7
+
+                // Bottom circle (y = -1)
+                { x: 1, y: -1, z: 0 }, // 8
+                { x: 0.71, y: -1, z: 0.71 }, // 9
+                { x: 0, y: -1, z: 1 }, // 10
+                { x: -0.71, y: -1, z: 0.71 }, // 11
+                { x: -1, y: -1, z: 0 }, // 12
+                { x: -0.71, y: -1, z: -0.71 }, // 13
+                { x: 0, y: -1, z: -1 }, // 14
+                { x: 0.71, y: -1, z: -0.71 }, // 15
+
+                // Centers
+                { x: 0, y: 1, z: 0 }, // 16: Top Center
+                { x: 0, y: -1, z: 0 }, // 17: Bottom Center
+            ],
+            faces: [
+                // 8 Side Quads
+                [0, 1, 9, 8],
+                [1, 2, 10, 9],
+                [2, 3, 11, 10],
+                [3, 4, 12, 11],
+                [4, 5, 13, 12],
+                [5, 6, 14, 13],
+                [6, 7, 15, 14],
+                [7, 0, 8, 15],
+
+                // Top Cap (Fan from center 16)
+                [16, 0, 1],
+                [16, 1, 2],
+                [16, 2, 3],
+                [16, 3, 4],
+                [16, 4, 5],
+                [16, 5, 6],
+                [16, 6, 7],
+                [16, 7, 0],
+
+                // Bottom Cap (Fan from center 17)
+                [17, 9, 8],
+                [17, 10, 9],
+                [17, 11, 10],
+                [17, 12, 11],
+                [17, 13, 12],
+                [17, 14, 13],
+                [17, 15, 14],
+                [17, 8, 15],
+            ],
+        };
+
+        let cubeMesh = {
+            vertices: [
+                { x: -1, y: -1, z: 1 }, // A, idx 0
+                { x: -1, y: 1, z: 1 }, // B, idx 1
+                { x: -1, y: -1, z: -1 }, // C, idx 2
+                { x: -1, y: 1, z: -1 }, // D, idx 3
+                { x: 1, y: -1, z: 1 }, // E, idx 4
+                { x: 1, y: 1, z: 1 }, // F, idx 5
+                { x: 1, y: -1, z: -1 }, // G, idx 6
+                { x: 1, y: 1, z: -1 }, // H, idx 7
+            ],
+            faces: [
+                [0, 1, 3, 2],
+                [2, 3, 7, 6],
+                [6, 7, 5, 4],
+                [4, 5, 1, 0],
+                [2, 6, 4, 0],
+                [7, 3, 1, 5],
+            ],
+        };
+
+        let signMesh = {
+            vertices: [
+                { x: 0, y: 0, z: 0 }, // 0, origin
+                { x: 0, y: 12, z: 0 }, // 1
+                { x: -4, y: 12, z: 0 }, // 2
+                { x: -6, y: 12, z: 0 }, // 3
+                { x: -4, y: 10, z: 0 }, // 4
+                { x: -6, y: 10, z: 0 }, // 5
+                { x: -8, y: 12, z: 0 }, // 6
+                { x: -8, y: 10, z: 0 }, // 7
+                { x: -2, y: 10, z: 0 }, // 8
+                { x: -8, y: 7, z: 0 }, // 9
+                { x: -2, y: 7, z: 0 }, // 10
+            ],
+            faces: [
+                [0, 1], // edge
+                [1, 6], // edge
+                [2, 4], // edge
+                [3, 5], // edge
+                [7, 8, 10, 9], // face
+            ],
+        };
+
+        let lightMesh = {
+            vertices: [
+                { x: 0, y: 0, z: 0 }, // 0, origin
+                { x: 0, y: 8, z: 0 }, // 1
+                { x: 6, y: 8, z: 0 }, // 2
+                { x: 6, y: 7, z: 0 }, // 3
+                { x: 4, y: 7, z: 0 }, // 4
+                { x: 4, y: 8, z: 0 }, // 5
+            ],
+            faces: [
+                [0, 1], // edge
+                [1, 2], // edge
+                [2, 3, 4, 5], // face
+                // [1, 2, 5]  // tri example
+            ],
+        };
+
+        let sunMesh = {
+            vertices: [
+                { x: 0, y: 0, z: 0 }, // 1: Origin / Center
+                { x: 1, y: 0, z: 0 }, // 2: 0°
+                { x: 0.87, y: 0.5, z: 0 }, // 3: 30°
+                { x: 0.5, y: 0.87, z: 0 }, // 4: 60°
+                { x: 0, y: 1, z: 0 }, // 5: 90°
+                { x: -0.5, y: 0.87, z: 0 }, // 6: 120°
+                { x: -0.87, y: 0.5, z: 0 }, // 7: 150°
+                { x: -1, y: 0, z: 0 }, // 8: 180°
+                { x: -0.87, y: -0.5, z: 0 }, // 9: 210°
+                { x: -0.5, y: -0.87, z: 0 }, // 10: 240°
+                { x: 0, y: -1, z: 0 }, // 11: 270°
+                { x: 0.5, y: -0.87, z: 0 }, // 12: 300°
+                { x: 0.87, y: -0.5, z: 0 }, // 13: 330°
+            ],
+            faces: [
+                [0, 1, 2],
+                [0, 2, 3],
+                [0, 3, 4],
+                [0, 4, 5],
+                [0, 5, 6],
+                [0, 6, 7],
+                [0, 7, 8],
+                [0, 8, 9],
+                [0, 9, 10],
+                [0, 10, 11],
+                [0, 11, 12],
+                [0, 12, 1], // Closes back to vertex 2
+            ],
+        };
+
+        // --- Instances --------------------------------------
+
+        let mountains = [];
+        for (let x = -7500; x < 7500; x += randomRange(1000, 2000)) {
+            if (Math.abs(x) < 700) continue;
+
+            let xScale = randomRange(0.5, 1);
+            let yScale = randomRange(1000, 3000);
+            let z = horizon.z + 10;
+
+            let tri = [
+                { x: -xScale, y: 0, z: 0 },
+                { x: xScale, y: 0, z: 0 },
+                { x: 0, y: 1, z: 0 },
+            ];
+
+            let mountain = {
+                mesh: {
+                    vertices: tri,
+                    faces: [[0, 1, 2]],
+                },
+                position: { x: x, y: 0, z: z },
+                scale: yScale,
+                color: PALETTE.mountains,
+            };
+            mountains.push(mountain);
+        }
+
+        // define objects with mesh (vertices, faces), position, scale, color
+        // signs and lights are procedurally instanced
+        let car = {
+            mesh: carMesh,
+            position: { ...defaultCarPosition },
+            scale: 1,
+            color: carColors[0],
+        };
+        let sun = {
+            mesh: sunMesh,
+            position: { x: 0, y: 2000, z: horizon.z + 100 },
+            scale: 1000,
+            color: PALETTE.sun,
+        };
+
+        // ===========================================================
+        // PRIMARY FUNCTIONS
+        // ===========================================================
+
+        // --- Helpers -----------------------------------------------
+
+        function randomRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // input: 2d {u, v} verts , in correct winding order
+        function signedArea2DTri(p1, p2, p3) {
+            return (
+                ((p2.u - p1.u) * (p3.v - p1.v) -
+                    (p3.u - p1.u) * (p2.v - p1.v)) *
+                0.5
             );
-            drawQuad(quad, object);
-          }
-          if (face.length === 3) {
-            //tri
-            let vert1 = object.mesh.vertices[face[0]];
-            let vert2 = object.mesh.vertices[face[1]];
-            let vert3 = object.mesh.vertices[face[2]];
+        }
+
+        // Creates a quad from two edge vertices by offsetting edge by the normal vector
+        // of the plane made by view vector and edge vector
+        // input: {x, y, z} verts in world space
+        // output: [vert1, vert2, vert3, vert4], where verts are {x,y,z}
+        function createQuadFromEdge(vert1, vert2) {
+            // calculate normal vector of the plane made by view vector and edge vector
+            let edge = {
+                x: vert2.x - vert1.x,
+                y: vert2.y - vert1.y,
+                z: vert2.z - vert1.z,
+            };
+            let view = { x: 0, y: 0, z: 1 };
+            let normal = {
+                x: edge.y * view.z - edge.z * view.y,
+                y: edge.z * view.x - edge.x * view.z,
+                z: edge.x * view.y - edge.y * view.x,
+            };
+            let normalized = {
+                x:
+                    normal.x /
+                    Math.sqrt(
+                        normal.x * normal.x +
+                            normal.y * normal.y +
+                            normal.z * normal.z,
+                    ),
+                y:
+                    normal.y /
+                    Math.sqrt(
+                        normal.x * normal.x +
+                            normal.y * normal.y +
+                            normal.z * normal.z,
+                    ),
+                z:
+                    normal.z /
+                    Math.sqrt(
+                        normal.x * normal.x +
+                            normal.y * normal.y +
+                            normal.z * normal.z,
+                    ),
+            };
+
+            // offset verts along normal
+            let width = 1.0; // extremely wide because thin lines don't draw at distance
+            let newvert1 = {
+                x: vert1.x - (normalized.x * width) / 2,
+                y: vert1.y - (normalized.y * width) / 2,
+                z: vert1.z - (normalized.z * width) / 2,
+            };
+            let newvert2 = {
+                x: vert2.x - (normalized.x * width) / 2,
+                y: vert2.y - (normalized.y * width) / 2,
+                z: vert2.z - (normalized.z * width) / 2,
+            };
+            let newvert3 = {
+                x: vert1.x + (normalized.x * width) / 2,
+                y: vert1.y + (normalized.y * width) / 2,
+                z: vert1.z + (normalized.z * width) / 2,
+            };
+            let newvert4 = {
+                x: vert2.x + (normalized.x * width) / 2,
+                y: vert2.y + (normalized.y * width) / 2,
+                z: vert2.z + (normalized.z * width) / 2,
+            };
+            return [newvert1, newvert2, newvert4, newvert3];
+        }
+
+        // --- Transformations ---------------------------------------
+
+        // inputs: takes mesh vertices, and object position/scale
+        // returns: screen space {u,v,z} for a given mesh vertex
+        // that is: the pixel coordinates on the canvas in wireframe mode and the
+        // simulated pixel coordinate in raster mode, plus depth
+        // NOTE: grabs camera and its properties from globals
+        function getUV(
+            vert,
+            object = { position: { x: 0, y: 0, z: 0 }, scale: 1 },
+        ) {
+            let camVert = getCameraRelativeCoords(
+                vert,
+                object.scale,
+                object.position,
+                camera,
+            );
+
+            if (camVert.z <= clipStart) return null;
+
+            // get pinhole projection uv coordinates
+            let u = camVert.x / camVert.z;
+            let v = camVert.y / camVert.z;
+
+            // get and return screen-space coordinates
+            let screenUV = getScreenUV(u, v, camVert.z);
+            return screenUV;
+        }
+
+        // coords = {x, y, z}, returns {x,y,z}
+        function getCameraRelativeCoords(coords, scale, position, camera) {
+            return {
+                x: coords.x * scale + position.x - camera.x,
+                y: coords.y * scale + position.y - camera.y,
+                z: coords.z * scale + position.z - camera.z,
+            };
+        }
+
+        // returns {u, v, z}
+        function getScreenUV(u, v, z) {
+            let height =
+                mode === "rasterEdges" || mode === "rasterFaces"
+                    ? rows
+                    : canvas.height;
+            let width =
+                mode === "rasterEdges" || mode === "rasterFaces"
+                    ? cols
+                    : canvas.width;
+
+            u = (u * height) / fov + width / 2;
+            v = (v * height) / fov + height / 2;
+            v = height - v;
+
+            return { u, v, z };
+        }
+
+        // --- Drawing -----------------------------------------------
+
+        // main draw loop
+        function draw() {
+            ctx.fillStyle = PALETTE.bg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    pixelGrid[i][j].color = PALETTE.bg;
+                    pixelGrid[i][j].depth = Infinity;
+                }
+            }
+
+            // wireframe mode draws edges as it goes, raster modes write pixels in one pass at end
+            drawVerticalLines();
+            drawHorizontalLines();
+            drawRoadLines();
+            drawObject(car);
+            drawRepeatingMeshes();
+            drawObject(sun);
+            drawMountains();
+
+            // simulated screen centers horizontally, top of screen is anchored, if
+            // canvas is exceedingly short relative to simualted screen height (mobile)
+            // start scaling the simualted screen down to preserve experience
+            let scale = 5;
+            if (rows * 5 - 125 > canvas.height) {
+                scale = Math.floor(canvas.height / rows);
+            }
+            const offsetX = Math.floor((canvas.width - cols * scale) / 2);
+
+            if (mode === "rasterEdges" || mode === "rasterFaces") {
+                for (let i = 0; i < cols; i++) {
+                    for (let j = 0; j < rows; j++) {
+                        ctx.fillStyle = pixelGrid[i][j].color;
+                        // drawing rect is expensive so only draw non-background pixels
+                        if (ctx.fillStyle != PALETTE.bg) {
+                            ctx.fillRect(
+                                offsetX + i * scale,
+                                j * scale,
+                                scale,
+                                scale,
+                            );
+                        }
+
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = PALETTE.pixelGrid;
+                        if (seePixelGrid) {
+                            ctx.strokeRect(
+                                offsetX + i * scale,
+                                j * scale,
+                                scale,
+                                scale,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawVerticalLines() {
+            // simultaneously draws lines to left and right out from center
+            for (
+                let i = roadWidth / 2;
+                i < roadWidth / 2 + 50 * linesInterval;
+                i += linesInterval
+            ) {
+                //  uv4 | | uv2
+                // uv3       uv1
+                let uv1 = getUV({ x: i, y: 0, z: camera.z + clipStart + 0.1 });
+                let uv2 = getUV({ x: i, y: 0, z: horizon.z });
+                let uv3 = getUV({ x: -i, y: 0, z: camera.z + clipStart + 0.1 });
+                let uv4 = getUV({ x: -i, y: 0, z: horizon.z });
+                if (
+                    uv1 === null ||
+                    uv2 === null ||
+                    uv3 === null ||
+                    uv4 === null
+                )
+                    break;
+                drawLine(uv1, uv2, PALETTE.ground);
+                drawLine(uv3, uv4, PALETTE.ground);
+                if (uv2.u > (mode === "wireframe" ? canvas.width : cols) - 100)
+                    break;
+            }
+        }
+
+        function drawHorizontalLines() {
+            const rightEdge = mode === "wireframe" ? canvas.width : cols;
+
+            // draw horizon line
+            let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: horizon.z });
+            let uv2 = getUV({ x: roadWidth / 2, y: 0, z: horizon.z });
+
+            // if any uv null (behind clip start), skip
+            if (uv1 === null || uv2 === null) return;
+
+            uv1.u = 0;
+            uv2.u = rightEdge;
+
+            drawLine(uv1, uv2, PALETTE.ground);
+
+            // draw horizontal lines, gap in middle for road
+            for (
+                let i =
+                    horizon.z - ((relativeOffset + camera.z) % linesInterval);
+                i > camera.z;
+                i -= linesInterval
+            ) {
+                // get road edges
+                let uv1 = getUV({ x: -roadWidth / 2, y: 0, z: i });
+                let uv2 = getUV({ x: roadWidth / 2, y: 0, z: i });
+
+                // if any uv null (behind clip start), skip
+                if (uv1 === null || uv2 === null) continue;
+
+                // draw line from screen edges to road edges
+                drawLine({ ...uv1, u: 0 }, uv1, PALETTE.ground);
+                drawLine(uv2, { ...uv2, u: rightEdge }, PALETTE.ground);
+            }
+        }
+
+        function drawRoadLines() {
+            for (
+                let i =
+                    horizon.z -
+                    ((relativeOffset + camera.z) % roadLineInterval);
+                i - roadLineLength > camera.z + clipStart;
+                i -= roadLineInterval
+            ) {
+                // keep line bottom within clip start
+                let lineBottomZ = i - roadLineLength;
+                if (lineBottomZ < camera.z + clipStart)
+                    lineBottomZ = camera.z + clipStart + 0.1;
+
+                let uv1 = getUV({ x: 0, y: 0, z: i });
+                let uv2 = getUV({ x: 0, y: 0, z: lineBottomZ });
+
+                drawLine(uv1, uv2, PALETTE.roadLines);
+            }
+        }
+
+        // draw repeating obstacles, light, and sign meshes along the road
+        function drawRepeatingMeshes() {
+            for (let i = 0; i < numLightMeshes; i++) {
+                let rawZ =
+                    i * meshInterval -
+                    ((relativeOffset + camera.z) % meshLimit);
+                let meshWorldZ = rawZ;
+
+                // wrap mesh world z
+                if (meshWorldZ < camera.z) {
+                    meshWorldZ += meshLimit;
+                }
+
+                let scale = scales[i % scales.length];
+
+                let instance = {
+                    mesh: lightMesh,
+                    position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
+                    scale: scale,
+                    color: PALETTE.lights,
+                };
+
+                let cubeX =
+                    -roadWidth / 4 +
+                    ((Math.floor(scale * 100) % 2) * roadWidth) / 2;
+                let cubeZ = meshWorldZ + ((scale * 100) % 20);
+                let normalizedRandom = (scale - 0.8) / (1.2 - 0.8);
+                let cubeScale = normalizedRandom * (4 - 0.5) + 0.5;
+
+                let cube = {
+                    mesh:
+                        Math.floor(scale * 1000) % 2 === 0
+                            ? cubeMesh
+                            : cylinderMesh,
+                    position: {
+                        x: cubeX,
+                        y: cubeScale / 2,
+                        z: cubeZ,
+                    },
+                    scale: cubeScale,
+                    color: PALETTE.obstacles,
+                };
+
+                drawObject(cube);
+            }
+            for (let i = 0; i < numLightMeshes; i++) {
+                let rawZ =
+                    i * meshInterval -
+                    ((relativeOffset + camera.z) % meshLimit);
+                let meshWorldZ = rawZ;
+
+                // wrap mesh world z
+                if (meshWorldZ < camera.z) {
+                    meshWorldZ += meshLimit;
+                }
+
+                let scale = scales[i % scales.length];
+
+                let instance = {
+                    mesh: lightMesh,
+                    position: { x: -roadWidth / 2, y: 0, z: meshWorldZ },
+                    scale: scale,
+                    color: PALETTE.lights,
+                };
+
+                drawObject(instance);
+            }
+            for (
+                let i =
+                    meshLimit -
+                    ((relativeOffset + camera.z) % (meshInterval * 4)) -
+                    meshInterval / 2;
+                i > camera.z;
+                i -= meshInterval * 4
+            ) {
+                let instance = {
+                    mesh: signMesh,
+                    position: { x: roadWidth / 2, y: 0, z: i },
+                    scale: 1,
+                    color: PALETTE.signs,
+                };
+                drawObject(instance);
+            }
+        }
+
+        function drawMountains() {
+            for (let i = 0; i < mountains.length; i++) {
+                drawObject(mountains[i]);
+            }
+        }
+
+        function drawObject(object) {
+            for (let f = 0; f < object.mesh.faces.length; f++) {
+                let face = object.mesh.faces[f];
+
+                if (mode === "wireframe" || mode === "rasterEdges") {
+                    for (let v = 0; v < face.length; v++) {
+                        let vert1 = object.mesh.vertices[face[v]];
+                        let vert2 =
+                            object.mesh.vertices[face[(v + 1) % face.length]];
+                        let uv1 = getUV(vert1, object);
+                        let uv2 = getUV(vert2, object);
+
+                        // if uv1 or uv2 are null (behind the camera), skip the line
+                        if (uv1 === null || uv2 === null) {
+                            continue;
+                        }
+
+                        drawLine(uv1, uv2, object.color);
+                    }
+                }
+
+                if (mode === "rasterFaces") {
+                    if (face.length === 2) {
+                        //edge
+                        let quad = createQuadFromEdge(
+                            object.mesh.vertices[face[0]],
+                            object.mesh.vertices[face[1]],
+                        );
+                        drawQuad(quad, object);
+                    }
+                    if (face.length === 3) {
+                        //tri
+                        let vert1 = object.mesh.vertices[face[0]];
+                        let vert2 = object.mesh.vertices[face[1]];
+                        let vert3 = object.mesh.vertices[face[2]];
+                        drawTri([vert1, vert2, vert3], object);
+                    }
+                    if (face.length === 4) {
+                        //quad
+                        let vert1 = object.mesh.vertices[face[0]];
+                        let vert2 = object.mesh.vertices[face[1]];
+                        let vert3 = object.mesh.vertices[face[2]];
+                        let vert4 = object.mesh.vertices[face[3]];
+                        drawQuad([vert1, vert2, vert3, vert4], object);
+                    }
+                }
+            }
+        }
+
+        // splits quad into two triangles and draws them
+        function drawQuad(
+            quad,
+            object = {
+                color: PALETTE.default,
+                position: { x: 0, y: 0, z: 0 },
+                scale: 1,
+            },
+        ) {
+            // quad must be passed in winding order
+            let vert1 = quad[0];
+            let vert2 = quad[1];
+            let vert3 = quad[2];
+            let vert4 = quad[3];
             drawTri([vert1, vert2, vert3], object);
-          }
-          if (face.length === 4) {
-            //quad
-            let vert1 = object.mesh.vertices[face[0]];
-            let vert2 = object.mesh.vertices[face[1]];
-            let vert3 = object.mesh.vertices[face[2]];
-            let vert4 = object.mesh.vertices[face[3]];
-            drawQuad([vert1, vert2, vert3, vert4], object);
-          }
-        }
-      }
-    }
-
-    // splits quad into two triangles and draws them
-    function drawQuad(
-      quad,
-      object = {
-        color: PALETTE.default,
-        position: { x: 0, y: 0, z: 0 },
-        scale: 1,
-      },
-    ) {
-      // quad must be passed in winding order
-      let vert1 = quad[0];
-      let vert2 = quad[1];
-      let vert3 = quad[2];
-      let vert4 = quad[3];
-      drawTri([vert1, vert2, vert3], object);
-      drawTri([vert1, vert3, vert4], object);
-    }
-
-    // draws a single triangle using signed area
-    // tri must be passed in winding order, object only needs color, position, and scale
-    function drawTri(
-      tri,
-      object = {
-        color: PALETTE.default,
-        position: { x: 0, y: 0, z: 0 },
-        scale: 1,
-      },
-    ) {
-      // get camera uv of tri verts
-      let vert1 = getUV(tri[0], object);
-      let vert2 = getUV(tri[1], object);
-      let vert3 = getUV(tri[2], object);
-
-      // if any vert null (behind clip start), skip
-      if (vert1 === null || vert2 === null || vert3 === null) return;
-
-      if (showFacesWireframe) {
-        drawLine(
-          { ...vert1, z: vert1.z - 0.5 },
-          { ...vert2, z: vert2.z - 0.5 },
-          PALETTE.default,
-        );
-        drawLine(
-          { ...vert2, z: vert2.z - 0.5 },
-          { ...vert3, z: vert3.z - 0.5 },
-          PALETTE.default,
-        );
-        drawLine(
-          { ...vert3, z: vert3.z - 0.5 },
-          { ...vert1, z: vert1.z - 0.5 },
-          PALETTE.default,
-        );
-      }
-      // get bounds and skip if outside camera view
-      // NOTE: should really round to nearest pixel, but causes sub-pixel triangles to not render
-      // which looks particularly bad given the signs/lights with thin lines so leaving as is
-      // since it guarantees at least one pixel will be drawn
-      let minU = Math.max(0, Math.floor(Math.min(vert1.u, vert2.u, vert3.u)));
-      let maxU = Math.min(
-        cols - 1,
-        Math.floor(Math.max(vert1.u, vert2.u, vert3.u)),
-      );
-
-      let minV = Math.max(0, Math.floor(Math.min(vert1.v, vert2.v, vert3.v)));
-      let maxV = Math.min(
-        rows - 1,
-        Math.floor(Math.max(vert1.v, vert2.v, vert3.v)),
-      );
-
-      // get total area of tri
-      let totalArea = signedArea2DTri(vert1, vert2, vert3);
-
-      if (Math.abs(totalArea) < 1e-5) return;
-
-      // reuse same object for optimization
-      let p = { u: 0, v: 0 };
-      // precompute division operation for optimization
-      let invTotalArea = 1 / totalArea;
-
-      // check if each pixel in tri and draw if is
-      for (let v = minV; v <= maxV; v++) {
-        p.v = v;
-        for (let u = minU; u <= maxU; u++) {
-          p.u = u;
-          // get barycentric weights
-          let w1 = signedArea2DTri(p, vert2, vert3) * invTotalArea;
-          let w2 = signedArea2DTri(vert1, p, vert3) * invTotalArea;
-          let w3 = signedArea2DTri(vert1, vert2, p) * invTotalArea;
-
-          // check if pixel is inside tri and draw if so
-          if (
-            (w1 >= 0 && w2 >= 0 && w3 >= 0) ||
-            (w1 <= 0 && w2 <= 0 && w3 <= 0)
-          ) {
-            // since barycentric weights are in screen space, must use inverted depth to compensate
-            // and reflect real 3d depth
-            let depth =
-              1 /
-              ((w1 * 1) / vert1.z + (w2 * 1) / vert2.z + (w3 * 1) / vert3.z);
-            setPixel(u, v, object.color, depth);
-          }
-        }
-      }
-    }
-
-    // set pixel color and depth
-    function setPixel(u, v, color, depth) {
-      let u0 = Math.floor(u);
-      let v0 = Math.floor(v);
-      if (u0 >= 0 && u0 < cols && v0 >= 0 && v0 < rows) {
-        if (depth < pixelGrid[u0][v0].depth) {
-          pixelGrid[u0][v0] = { color: color, depth: depth };
-        }
-      }
-    }
-
-    // draws line using canvas strokes if wireframe, or manual raster lines if raster mode
-    // input verts {u,v} (include z in raster modes), {u,v} in screen space
-    function drawLine(p1, p2, color = PALETTE.default) {
-      if (mode === "wireframe") {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = color;
-
-        ctx.beginPath();
-        ctx.moveTo(p1.u, p1.v);
-        ctx.lineTo(p2.u, p2.v);
-        ctx.stroke();
-      }
-      if (mode === "rasterEdges" || mode === "rasterFaces") {
-        let dx = p2.u - p1.u;
-        let dy = p2.v - p1.v;
-        let steps = Math.max(Math.abs(dx), Math.abs(dy));
-
-        if (steps === 0) {
-          setPixel(
-            Math.round(p1.u),
-            Math.round(p1.v),
-            color,
-            Math.min(p1.z, p2.z),
-          );
-          return;
+            drawTri([vert1, vert3, vert4], object);
         }
 
-        let xStep = dx / steps;
-        let yStep = dy / steps;
-        let x = p1.u;
-        let y = p1.v;
+        // draws a single triangle using signed area
+        // tri must be passed in winding order, object only needs color, position, and scale
+        function drawTri(
+            tri,
+            object = {
+                color: PALETTE.default,
+                position: { x: 0, y: 0, z: 0 },
+                scale: 1,
+            },
+        ) {
+            // get camera uv of tri verts
+            let vert1 = getUV(tri[0], object);
+            let vert2 = getUV(tri[1], object);
+            let vert3 = getUV(tri[2], object);
 
-        for (let i = 0; i <= steps; i++) {
-          // must use inverted depth to compensate for barycentric weights being in screen space
-          let depth = 1 / (((1 / p1.z) * (steps - i) + (1 / p2.z) * i) / steps);
-          setPixel(Math.round(x), Math.round(y), color, depth);
-          x += xStep;
-          y += yStep;
+            // if any vert null (behind clip start), skip
+            if (vert1 === null || vert2 === null || vert3 === null) return;
+
+            if (showFacesWireframe) {
+                drawLine(
+                    { ...vert1, z: vert1.z - 0.5 },
+                    { ...vert2, z: vert2.z - 0.5 },
+                    PALETTE.default,
+                );
+                drawLine(
+                    { ...vert2, z: vert2.z - 0.5 },
+                    { ...vert3, z: vert3.z - 0.5 },
+                    PALETTE.default,
+                );
+                drawLine(
+                    { ...vert3, z: vert3.z - 0.5 },
+                    { ...vert1, z: vert1.z - 0.5 },
+                    PALETTE.default,
+                );
+            }
+            // get bounds and skip if outside camera view
+            let minU = Math.max(
+                0,
+                Math.floor(Math.min(vert1.u, vert2.u, vert3.u)),
+            );
+            let maxU = Math.min(
+                cols - 1,
+                Math.floor(Math.max(vert1.u, vert2.u, vert3.u)),
+            );
+
+            let minV = Math.max(
+                0,
+                Math.floor(Math.min(vert1.v, vert2.v, vert3.v)),
+            );
+            let maxV = Math.min(
+                rows - 1,
+                Math.floor(Math.max(vert1.v, vert2.v, vert3.v)),
+            );
+
+            // get total area of tri
+            let totalArea = signedArea2DTri(vert1, vert2, vert3);
+
+            if (Math.abs(totalArea) < 1e-5) return;
+
+            // reuse same object for optimization
+            let p = { u: 0, v: 0 };
+            // precompute division operation for optimization
+            let invTotalArea = 1 / totalArea;
+            let z1Inv = 1 / vert1.z;
+            let z2Inv = 1 / vert2.z;
+            let z3Inv = 1 / vert3.z;
+
+            // check if each pixel in tri and draw if is
+            for (let v = minV; v <= maxV; v++) {
+                p.v = v;
+                for (let u = minU; u <= maxU; u++) {
+                    p.u = u;
+                    // get barycentric weights
+                    let w1 = signedArea2DTri(p, vert2, vert3) * invTotalArea;
+                    let w2 = signedArea2DTri(vert1, p, vert3) * invTotalArea;
+                    let w3 = signedArea2DTri(vert1, vert2, p) * invTotalArea;
+
+                    // check if pixel is inside tri and draw if so
+                    if (
+                        (w1 >= 0 && w2 >= 0 && w3 >= 0) ||
+                        (w1 <= 0 && w2 <= 0 && w3 <= 0)
+                    ) {
+                        // since barycentric weights are in screen space, must use inverted depth to compensate
+                        // and reflect real 3d depth
+                        let depth = 1 / (w1 * z1Inv + w2 * z2Inv + w3 * z3Inv);
+                        setPixel(u, v, object.color, depth);
+                    }
+                }
+            }
         }
-      }
-    }
 
-    // updates world state
-    function update(dt) {
-      relativeOffset = relativeOffset + speed * dt;
+        // set pixel color and depth
+        function setPixel(u, v, color, depth) {
+            let u0 = Math.floor(u);
+            let v0 = Math.floor(v);
+            if (u0 >= 0 && u0 < cols && v0 >= 0 && v0 < rows) {
+                if (depth < pixelGrid[u0][v0].depth) {
+                    pixelGrid[u0][v0] = { color: color, depth: depth };
+                }
+            }
+        }
 
-      const acceleration = 100 * dt;
-      const moveSpeed = 50 * dt;
+        // draws line using canvas strokes if wireframe, or manual raster lines if raster mode
+        // input verts {u,v} (include z in raster modes), {u,v} in screen space
+        function drawLine(p1, p2, color = PALETTE.default) {
+            if (mode === "wireframe") {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = color;
 
-      if (keys["ArrowUp"] || keys["w"]) {
-        speed = Math.min(speed + acceleration, 500);
-      }
-      if (keys["ArrowDown"] || keys["s"]) {
-        speed = Math.max(speed - acceleration, 0);
-      }
-      if (keys["ArrowLeft"] || keys["a"]) {
-        camera.x = Math.max(
-          camera.x - 0.005 * moveSpeed * speed,
-          -roadWidth / 2 + 2,
-        );
-        car.position.x = Math.max(
-          car.position.x - 0.005 * moveSpeed * speed,
-          -roadWidth / 2 + 2,
-        );
-      }
-      if (keys["ArrowRight"] || keys["d"]) {
-        camera.x = Math.min(
-          camera.x + 0.005 * moveSpeed * speed,
-          roadWidth / 2 - 2,
-        );
-        car.position.x = Math.min(
-          car.position.x + 0.005 * moveSpeed * speed,
-          roadWidth / 2 - 2,
-        );
-      }
-      if (keys["q"] || keys[","]) {
-        camera.y = Math.max(camera.y - moveSpeed, camLimits.miny);
-      }
-      if (keys["e"] || keys["."]) {
-        camera.y = Math.min(camera.y + moveSpeed, camLimits.maxy);
-      }
-    }
+                ctx.beginPath();
+                ctx.moveTo(p1.u, p1.v);
+                ctx.lineTo(p2.u, p2.v);
+                ctx.stroke();
+            }
+            if (mode === "rasterEdges" || mode === "rasterFaces") {
+                let dx = p2.u - p1.u;
+                let dy = p2.v - p1.v;
+                let steps = Math.max(Math.abs(dx), Math.abs(dy));
 
-    document.addEventListener("keydown", (event) => {
-      if (
-        [
-          "w",
-          "a",
-          "s",
-          "d",
-          "q",
-          "e",
-          "ArrowUp",
-          "ArrowDown",
-          "ArrowLeft",
-          "ArrowRight",
-          " ",
-          ",",
-          ".",
-        ].includes(event.key)
-      ) {
-        event.preventDefault();
-      }
+                if (steps === 0) {
+                    setPixel(
+                        Math.round(p1.u),
+                        Math.round(p1.v),
+                        color,
+                        Math.min(p1.z, p2.z),
+                    );
+                    return;
+                }
 
-      keys[event.key] = true;
+                let xStep = dx / steps;
+                let yStep = dy / steps;
+                let x = p1.u;
+                let y = p1.v;
 
-      if (event.key === "r") {
-        camera = { ...defaultCameraPosition };
-        car.position = { ...defaultCarPosition };
-        speed = 100;
-        relativeOffset = 0;
-        colorIndex = 0;
-        applyPalette(0);
-        seePixelGrid = false;
-        showFacesWireframe = false;
-        mode = "wireframe";
-        localStorage.setItem("mode", "wireframe");
-        car.color = carColors[colorIndex];
-      }
-      if (event.key === "1") {
-        mode = "wireframe";
-        localStorage.setItem("mode", "wireframe");
-      }
-      if (event.key === "2") {
-        mode = "rasterEdges";
-        localStorage.setItem("mode", "rasterEdges");
-      }
-      if (event.key === "3") {
-        mode = "rasterFaces";
-        localStorage.setItem("mode", "rasterFaces");
-      }
-      if (event.key === "x") {
-        seePixelGrid = !seePixelGrid;
-      }
-      if (event.key === "c") {
-        showFacesWireframe = !showFacesWireframe;
-      }
-      if (event.key === "z") {
-        togglePalette();
-      }
+                for (let i = 0; i <= steps; i++) {
+                    // must use inverted depth to compensate for barycentric weights being in screen space
+                    let depth =
+                        1 /
+                        (((1 / p1.z) * (steps - i) + (1 / p2.z) * i) / steps);
+                    setPixel(Math.round(x), Math.round(y), color, depth);
+                    x += xStep;
+                    y += yStep;
+                }
+            }
+        }
 
-      if (event.key === " ") {
-        colorIndex = (colorIndex + 1) % carColors.length;
-        car.color = carColors[colorIndex];
-      }
-    });
+        // --- World State Updates -----------------------------------
 
-    document.addEventListener("keyup", (event) => {
-      keys[event.key] = false;
-    });
+        // updates world state
+        function update(dt) {
+            relativeOffset = relativeOffset + speed * dt;
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+            const acceleration = 100 * dt;
+            const moveSpeed = 50 * dt;
 
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+            if (keys["ArrowUp"] || keys["w"]) {
+                speed = Math.min(speed + acceleration, 500);
+            }
+            if (keys["ArrowDown"] || keys["s"]) {
+                speed = Math.max(speed - acceleration, 0);
+            }
+            if (keys["ArrowLeft"] || keys["a"]) {
+                camera.x = Math.max(
+                    camera.x - 0.005 * moveSpeed * speed,
+                    -roadWidth / 2 + 2,
+                );
+                car.position.x = Math.max(
+                    car.position.x - 0.005 * moveSpeed * speed,
+                    -roadWidth / 2 + 2,
+                );
+            }
+            if (keys["ArrowRight"] || keys["d"]) {
+                camera.x = Math.min(
+                    camera.x + 0.005 * moveSpeed * speed,
+                    roadWidth / 2 - 2,
+                );
+                car.position.x = Math.min(
+                    car.position.x + 0.005 * moveSpeed * speed,
+                    roadWidth / 2 - 2,
+                );
+            }
+            if (keys["q"] || keys[","]) {
+                camera.y = Math.max(camera.y - moveSpeed, camLimits.miny);
+            }
+            if (keys["e"] || keys["."]) {
+                camera.y = Math.min(camera.y + moveSpeed, camLimits.maxy);
+            }
+        }
 
-    let lastTime = 0;
-    function loop(timestamp) {
-      if (!lastTime) lastTime = timestamp;
-      let dt = (timestamp - lastTime) / 1000;
-      lastTime = timestamp;
+        document.addEventListener("keydown", (event) => {
+            if (
+                [
+                    "w",
+                    "a",
+                    "s",
+                    "d",
+                    "q",
+                    "e",
+                    "ArrowUp",
+                    "ArrowDown",
+                    "ArrowLeft",
+                    "ArrowRight",
+                    " ",
+                    ",",
+                    ".",
+                ].includes(event.key)
+            ) {
+                event.preventDefault();
+            }
 
-      update(dt);
-      draw();
+            keys[event.key] = true;
 
-      requestAnimationFrame(loop);
-    }
+            if (event.key === "r") {
+                camera = { ...defaultCameraPosition };
+                car.position = { ...defaultCarPosition };
+                speed = 100;
+                relativeOffset = 0;
+                colorIndex = 0;
+                applyPalette(0);
+                seePixelGrid = false;
+                showFacesWireframe = false;
+                mode = "wireframe";
+                localStorage.setItem("mode", "wireframe");
+                car.color = carColors[colorIndex];
+            }
+            if (event.key === "1") {
+                mode = "wireframe";
+                localStorage.setItem("mode", "wireframe");
+            }
+            if (event.key === "2") {
+                mode = "rasterEdges";
+                localStorage.setItem("mode", "rasterEdges");
+            }
+            if (event.key === "3") {
+                mode = "rasterFaces";
+                localStorage.setItem("mode", "rasterFaces");
+            }
+            if (event.key === "x") {
+                seePixelGrid = !seePixelGrid;
+            }
+            if (event.key === "c") {
+                showFacesWireframe = !showFacesWireframe;
+            }
+            if (event.key === "z") {
+                togglePalette();
+            }
 
-    requestAnimationFrame(loop);
-  </script>
+            if (event.key === " ") {
+                colorIndex = (colorIndex + 1) % carColors.length;
+                car.color = carColors[colorIndex];
+            }
+        });
+
+        document.addEventListener("keyup", (event) => {
+            keys[event.key] = false;
+        });
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        let lastTime = 0;
+        function loop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            let dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            update(dt);
+            draw();
+
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+    </script>
 </html>
