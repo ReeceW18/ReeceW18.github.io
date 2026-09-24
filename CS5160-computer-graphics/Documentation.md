@@ -1,11 +1,9 @@
 # Overview
 This is the documentation for my [CS5160 Computer Graphics](/CS5160-computer-graphics/) Project 1. The assignment instructed creating an interactive experience rendered via pinhole projection, with separate modes for using js canvas strokes, simulated rasteration with lines, and simulated rasteration with triangle faces. It is available to interact with at [CS5160_Project1.html](CS5160_Project1.html). [Source code](https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/CS5160_Project1.html).
 
-<video controls width="100%" style="max-width: 800px;">
+<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
   <source src="/CS5160-computer-graphics/assets/demo.mp4" type="video/mp4">
 </video>
-
-TODO: make sure video works properly
 
 ### NOTES ON TERMINOLOGY
 When I use UV in this documentation and in variable names it generally refers to 2D x,y coordinates, when talking about pinhole projection in class we used UV to distinguish between the projected 2d xy and 3d space xyz.
@@ -80,9 +78,9 @@ The ground plane is procedurally generated as vertical and horizontal lines, in 
 #### Meshes
 Meshes are defined as vertices and faces. With vertices being a list of {x,y,z} vertices relative to object origin and faces are a list of lists of vertex indicies. Faces can be defined with lengths of 2-4 (edge, tri, or quad). 
 
-<div style="display: flex; align-items: flex-start; gap: 8px;">
-  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: 100%; max-width: 400px; height: auto; min-width: 0; flex: 1 1 0;">
-  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: 100%; max-width: 400px; height: auto; min-width: 0; flex: 1 1 0;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px;">
+  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
 </div>
 
 There are a few different categories of meshes:
@@ -264,10 +262,10 @@ The concepts we learned in class that were applied in this project include:
 - triangle rasterization (barycentric coordinates, signed area)
 
 ### 3D object representation
-<div style="display: flex; align-items: flex-start; gap: 8px;">
-  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: 100%; max-width: 400px; height: auto; min-width: 0; flex: 1 1 0;">
-  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: 100%; max-width: 400px; height: auto; min-width: 0; flex: 1 1 0;">
-  <img src="/CS5160-computer-graphics/assets/sunInstance.png" style="width: 100%; max-width: 400px; height: auto; min-width: 0; flex: 1 1 0">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px;">
+  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/assets/sunInstance.png" style="width: min(100%, 400px); height: auto;">
 </div>
 We discussed representing 3d objects as vertices and faces/edges in object space. Then instances can be created by offsetting the vertices to a position in world space. Which is exactly what my program does.
 

@@ -4,7 +4,7 @@ This is a portfolio for my Fall 2026 CS5160 Computer Graphics course. Code files
 
 ## Project 1 - Interactive Experience
 
-<video controls width="100%" style="max-width: 800px;">
+<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
   <source src="/CS5160-computer-graphics/assets/demo.mp4" type="video/mp4">
 </video>
 
