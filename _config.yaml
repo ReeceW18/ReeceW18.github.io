@@ -1,3 +1,10 @@
 name: Reece Whitaker
 title: Reece Whitaker
 theme: jekyll-theme-hacker
+
+plugins:
+  - jekyll-readme-index
+  - jekyll-optional-front-matter
+  - jekyll-default-layout
+  - jekyll-relative-links
+  - jekyll-titles-from-headings
