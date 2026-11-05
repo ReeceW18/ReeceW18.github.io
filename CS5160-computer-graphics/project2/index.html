@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Cube World</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+                background-color: #050510;
+                color: #ffffff;
+                font-family: Arial, sans-serif;
+            }
+
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            .panel, button {
+                background: rgba(5, 5, 16, 0.65);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                border-radius: 8px;
+                color: #ffffff;
+            }
+
+            .panel {
+                position: fixed;
+                top: 12px;
+                left: 12px;
+                right: 12px;
+                max-width: 600px;
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
+                padding: 12px 16px;
+                z-index: 10;
+            }
+
+            summary {
+                font-size: 20px;
+                font-weight: bold;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            details p {
+                margin: 10px 0 0 0;
+                font-size: 15px;
+                line-height: 1.5;
+                color: #d0d0d8;
+            }
+
+            a {
+                color: #01cdfe;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            .feature-list {
+                margin: 8px 0 12px 20px;
+                padding: 0;
+                font-size: 14px;
+                color: #d0d0d8;
+                line-height: 1.5;
+            }
+
+            .feature-list li {
+                margin-bottom: 6px;
+            }
+
+            .feature-list strong {
+                color: #ffffff;
+            }
+
+            .controls {
+                position: fixed;
+                bottom: 12px;
+                left: 12px;
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                z-index: 10;
+            }
+
+            button {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 8px;
+                font-size: 15px;
+                cursor: pointer;
+                transition: background 0.15s, transform 0.1s;
+            }
+
+            button:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+
+            button:active {
+                transform: scale(0.96);
+            }
+
+            .key {
+                background: rgba(255, 255, 255, 0.15);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+
+            .full-width-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .warning-box {
+                background: rgba(255, 60, 60, 0.2);
+                border: 1px solid rgba(255, 80, 80, 0.6);
+                padding: 8px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                color: #ffcccc;
+                margin-bottom: 10px;
+                line-height: 1.4;
+            }
+
+            .perf-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 8px 0;
+            }
+
+            .slider {
+                flex: 1;
+                cursor: pointer;
+            }
+
+            .perf-input {
+                width: 75px;
+                padding: 3px;
+                background: rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                border-radius: 4px;
+                color: #ffffff;
+                text-align: center;
+                font-size: 13px;
+            }
+
+            .modal-center {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                max-width: 500px;
+                width: calc(100% - 32px);
+                text-align: center;
+                z-index: 100;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            }
+
+            .modal-title {
+                margin: 0 0 10px 0;
+                color: #ff5555;
+                font-size: 20px;
+            }
+
+        </style>
+    </head>
+    <body>
+        <details class="panel" open>
+            <summary>Cube World - <a href="/">Reece Whitaker</a></summary>
+            <p>
+                This project was completed for my Computer Graphics course to explore using WebGL 2 to render graphics using real GPU pipelines.
+                See technical documentation on my <a href="Documentation.html">website</a> or
+                view the source code on <a href="https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/project2/index.html">GitHub</a>.
+            </p>
+            <p>
+                The application utilizes WebGL shaders, specifically instanced rendering to efficently render massive voxel landscapes in real time directly on the gpu. It features two modes:
+            </p>
+            <ul class="feature-list">
+                <li><strong>Procedural Mode:</strong> Generates terrain heights on-the-fly using layered sine/cosine waves and generates colors based on those heights. It also includes a simple boat traveling along a cubic Bézier curve.</li>
+                <li><strong>Image Mode:</strong> Loads exaggerated height and color maps of Cincinnati as textures and uses the GLSL texture sampler inside the shader.</li>
+            </ul>
+
+            <button type="button" id="perf-toggle-btn" class="full-width-btn">
+                High Performance Mode
+            </button>
+            <div id="perf-controls" style="display: none; margin-top: 10px;">
+                <div class="warning-box">
+                    ⚠️ <strong>WARNING:</strong> Higher values increase cubes quadratically (e.g. 10 = 1,000 grid size / 1,000,000 cubes / 36M vertices). Up to 10 should be reasonable on most devices, up to 30 on high end devices, and the text box goes up to 50 if you want to push it. Setting this too high can lag, freeze, or crash your browser/GPU.
+                </div>
+
+                <p>
+                    Maximum Multiplier:
+                </p>
+
+                <div class="perf-row">
+                    <input type="range" id="mult-slider" min="0.5" max="30" step=".1" value="5" class="slider"/>
+                    <input type="number" id="mult-number" min="0.05" max="50" step="1" value="5" class="perf-input"/>
+                </div>
+
+                <p>Grid Size: <strong id="grid-size-display" style="color: #01cdfe;">100</strong></p>
+            </div>
+
+        </details>
+
+        <div class="controls">
+            <button type="button" data-mode="procedural">
+                <span class="key">1</span> Procedural Mode
+            </button>
+            <button type="button" data-mode="image">
+                <span class="key">2</span> Image Mode
+            </button>
+        </div>
+
+        <!-- Fallback message shown only if WebGL 2 fails to initialize -->
+        <div id="no-webgl" class="panel modal-center" style="display: none;">
+            <h3 class="modal-title">WebGL 2 Not Supported</h3>
+            <p>
+                This 3D voxel experience requires <strong>WebGL 2</strong> and hardware acceleration to run shaders directly on your GPU.<br><br>
+                Please try using a device with WebGL 2 support and ensure <strong>Hardware Acceleration</strong> is enabled in your browser settings.
+            </p>
+            <p>
+                You can also watch a demo video on the <a href="Documentation.html" style="color: #01cdfe; text-decoration: underline; font-weight: bold;">Documentation Page</a>.
+            </p>
+        </div>
+
+        <canvas id="canvas"></canvas>
+        <script src="index.js"></script>
+    </body>
+</html>

@@ -1,8 +1,8 @@
 # Overview
-This is the documentation for my [CS5160 Computer Graphics](/CS5160-computer-graphics/) Project 1. The assignment instructed creating an interactive experience rendered via pinhole projection, with separate modes for using js canvas strokes, simulated rasteration with lines, and simulated rasteration with triangle faces. It is available to interact with at [CS5160_Project1.html](CS5160_Project1.html). [Source code](https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/CS5160_Project1.html).
+This is the documentation for my [CS5160 Computer Graphics](/CS5160-computer-graphics/) Project 1. The assignment instructed creating an interactive experience rendered via pinhole projection, with separate modes for using js canvas strokes, simulated rasteration with lines, and simulated rasteration with triangle faces. It is available to interact with at [CS5160_Project1.html](.). [Source code](https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/project1/index.html).
 
-<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
-  <source src="/CS5160-computer-graphics/assets/demo.mp4" type="video/mp4">
+<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/project1/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
+  <source src="/CS5160-computer-graphics/project1/assets/demo.mp4" type="video/mp4">
 </video>
 
 ### NOTES ON TERMINOLOGY
@@ -15,12 +15,12 @@ I was inspired by vaporwave style wallpapers (ex: <https://www.youtube.com/watch
 
 Notably, the score was never implemented, later decided that it was out of scope for this project.
 
-<img src="/CS5160-computer-graphics/assets/CS5160_Project1_Design_Page1.jpg" style="max-height: 100%; height: auto; max-width: min(400px, 100%);">
-<img src="/CS5160-computer-graphics/assets/CS5160_Project1_Design_Page2.jpg" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(400px, 100%);">
+<img src="/CS5160-computer-graphics/project1/assets/CS5160_Project1_Design_Page1.jpg" style="max-height: 100%; height: auto; max-width: min(400px, 100%);">
+<img src="/CS5160-computer-graphics/project1/assets/CS5160_Project1_Design_Page2.jpg" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(400px, 100%);">
 
 ## Features
 ### Modes
-<img src="/CS5160-computer-graphics/assets/modes.png" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(400px, 100%);">
+<img src="/CS5160-computer-graphics/project1/assets/modes.png" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(400px, 100%);">
     
 All modes use simple pinhole projection, that is object space offset to world space offset to camera space then projected to screen space using simple pinhole projection, u = x / z, v = y / z. Depending on mode scales to the js canvas width and height or a simulated 320x200 screen.
 
@@ -38,7 +38,7 @@ Brief overview of core pipeline structure:
 This was a brief overview of the core pipeline structure, a more detailed deep dive into the rendering pipeline can be found later on in the document.
 
 ### Scene Components
-<img src="/CS5160-computer-graphics/assets/screenshot.png" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(800px, 100%);">
+<img src="/CS5160-computer-graphics/project1/assets/screenshot.png" style="vertical-align: top; max-height: 100%; height: auto; max-width: min(800px, 100%);">
     
 The scene consists of a few categories of objects: the camera, procedural lines, and mesh instances.
 
@@ -79,8 +79,8 @@ The ground plane is procedurally generated as vertical and horizontal lines, in 
 Meshes are defined as vertices and faces. With vertices being a list of {x,y,z} vertices relative to object origin and faces are a list of lists of vertex indicies. Faces can be defined with lengths of 2-4 (edge, tri, or quad). 
 
 <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px;">
-  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
-  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
 </div>
 
 There are a few different categories of meshes:
@@ -93,7 +93,7 @@ The cube, sign, and light I manually typed out myself. The mountains are just a 
 #### Instances
 Instances are defined with mesh, position, scale, and color.
 
-<img src="/CS5160-computer-graphics/assets/sunInstance.png" style="width: 100%; max-width: 600px; height: auto; min-width: 0;">
+<img src="/CS5160-computer-graphics/project1/assets/sunInstance.png" style="width: 100%; max-width: 600px; height: auto; min-width: 0;">
 
 We have a few categories of instances:
 - On the fly procedurally generated repeating in z: obstacles, signs, and lights
@@ -167,16 +167,16 @@ Palette list/credits:
 
 Palette Gallery:
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,300px),1fr)); gap: 8px; margin-bottom: 1em;">
-  <img src="/CS5160-computer-graphics/assets/vaporsthetic.png" style="width: 100%; height: auto;">
-  <img src="/CS5160-computer-graphics/assets/original.png" style="width: 100%; height: auto;">
-  <img src="/CS5160-computer-graphics/assets/pastel_horizon.png" style="width: 100%; height: auto;">
-  <img src="/CS5160-computer-graphics/assets/color_palette_studio.png" style="width: 100%; height: auto;">
-  <img src="/CS5160-computer-graphics/assets/scheme_color.png" style="width: 100%; height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/vaporsthetic.png" style="width: 100%; height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/original.png" style="width: 100%; height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/pastel_horizon.png" style="width: 100%; height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/color_palette_studio.png" style="width: 100%; height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/scheme_color.png" style="width: 100%; height: auto;">
 </div>
 
 ## Rendering
 <figure style="margin: 0; width: min(100%, 600px);">
-  <img src="/CS5160-computer-graphics/assets/render_pipeline_diagram.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
+  <img src="/CS5160-computer-graphics/project1/assets/render_pipeline_diagram.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
   <figcaption style="font-size: 0.85em; color: #909090;">pipeline function flow diagram</figcaption>
 </figure>
 
@@ -263,15 +263,15 @@ The concepts we learned in class that were applied in this project include:
 
 ### 3D object representation
 <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px;">
-  <img src="/CS5160-computer-graphics/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
-  <img src="/CS5160-computer-graphics/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
-  <img src="/CS5160-computer-graphics/assets/sunInstance.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/cubeMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/lightMesh.png" style="width: min(100%, 400px); height: auto;">
+  <img src="/CS5160-computer-graphics/project1/assets/sunInstance.png" style="width: min(100%, 400px); height: auto;">
 </div>
 We discussed representing 3d objects as vertices and faces/edges in object space. Then instances can be created by offsetting the vertices to a position in world space. Which is exactly what my program does.
 
 ### Pinhole projection
 <figure style="margin: 0; width: min(100%, 600px);">
-  <img src="/CS5160-computer-graphics/assets/pinhole_projection.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
+  <img src="/CS5160-computer-graphics/project1/assets/pinhole_projection.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
   <figcaption style="font-size: 0.85em; color: #909090;">from our class slides</figcaption>
 </figure>
 
@@ -282,14 +282,14 @@ In class we discussed methods of making sure that triangles are drawn in the cor
 
 ### Line rasterization
 <figure style="margin: 0; width: min(100%, 600px);">
-  <img src="/CS5160-computer-graphics/assets/line_rasterization.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
+  <img src="/CS5160-computer-graphics/project1/assets/line_rasterization.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
   <figcaption style="font-size: 0.85em; color: #909090;">from our class slides</figcaption>
 </figure>
 In class we discussed methods for rasterizing lines, in particular we looked at exact code for arguably the most straightforward method, where you incrememnt along the line by moving a fixed distance in one axis and stepping by slope relative to that distance in the other axis. My implementation generalizes this by taking the max between dx and dy and then stepping by dx/steps and dy/steps. At each increment rounding the x,y values and drawing to that pixel.
 
 ### Triangle rasterization
 <figure style="margin: 0; width: min(100%, 600px);">
-  <img src="/CS5160-computer-graphics/assets/triangle_rasterization.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
+  <img src="/CS5160-computer-graphics/project1/assets/triangle_rasterization.png" style="width: 100%; max-width: 800px; height: auto; min-width: 0;">
   <figcaption style="font-size: 0.85em; color: #909090;">from our class slides</figcaption>
 </figure>
 In class we discussed methods for rasterizing triangles. The method I chose to implement is using the signed barycentric coordinates. Barycentric coordinates represent the relative distance to a triangles vertices. If you use signed area in the calculation of barycentric coordinates, then negative values indicate that a point is outside the triangle. So if all three barycentric coordinates are positive, the point is inside the triangle. Barycentric coordinates are also used to interpolate depth to get the precise depth at that point. Not that the inverse of z must be used since barycentric coordinates are calculated from screen space coordinates, under which z is inverted.

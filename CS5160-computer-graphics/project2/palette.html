@@ -1,0 +1,235 @@
+<!--Helper for generating code from hexadecimal palettes-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Palette Converter for Cube World</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0d0e15;
+      color: #e0e0e8;
+      padding: 24px;
+      margin: 0;
+    }
+    h2 { margin-top: 0; color: #01cdfe; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .color-card {
+      background: #181926;
+      border: 1px solid #2e3048;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .color-label { font-weight: bold; font-size: 14px; }
+    .color-inputs { display: flex; align-items: center; gap: 8px; }
+    input[type="color"] {
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: none;
+    }
+    input[type="text"] {
+      width: 75px;
+      padding: 4px 6px;
+      background: #0d0e15;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    .section-title {
+      font-size: 14px;
+      color: #a0a0b8;
+      margin: 16px 0 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      background: #181926;
+      border: 1px solid #333650;
+      border-radius: 6px;
+      color: #4af626;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      padding: 10px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+    button.copy-btn {
+      background: #01cdfe;
+      color: #050510;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button.copy-btn:hover { background: #55e0ff; }
+    button.copy-btn:active { transform: scale(0.97); }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(1, 205, 254, 0.9);
+      color: #050510;
+      font-weight: bold;
+      padding: 10px 18px;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🎨 Cube World Palette Generator</h2>
+  <p style="font-size: 14px; color: #8f90a6; margin-bottom: 16px;">
+    Pick colors or paste Hex codes below. Copy and paste the resulting code straight into <code>cube-world.js</code>!
+  </p>
+
+  <div class="grid" id="color-grid"></div>
+
+  <div class="section-title">1. Drop into JS Variables (Lines ~56-58)</div>
+  <textarea id="js-output" readonly></textarea>
+  <button class="copy-btn" onclick="copyText('js-output')">Copy JS Snippet</button>
+
+  <div class="section-title">2. Drop into Shader's <code>terrainColor()</code> function (Lines ~189-194)</div>
+  <textarea id="shader-output" readonly></textarea>
+  <button class="copy-btn" onclick="copyText('shader-output')">Copy Shader Snippet</button>
+
+  <div id="toast">Copied to clipboard! ✓</div>
+
+  <script>
+    const colors = [
+      { id: 'bg',     name: 'Background', default: '#232228' },
+      { id: 'boat',   name: 'Boat / Mast',default: '#801A1A' },
+      { id: 'sail',   name: 'Sail',       default: '#E6E6CC' },
+      { id: 'blue',   name: 'Blue (Water)',default: '#0000FF' },
+      { id: 'yellow', name: 'Yellow (Sand)',default: '#FFFF00' },
+      { id: 'green',  name: 'Green (Grass)',default: '#00FF00' },
+      { id: 'grey',   name: 'Grey (Rock)', default: '#B3B3B3' },
+      { id: 'white',  name: 'White (Snow)', default: '#FFFFFF' }
+    ];
+
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const num = parseInt(hex, 16);
+      return [
+        ((num >> 16) & 255) / 255,
+        ((num >> 8) & 255) / 255,
+        (num & 255) / 255
+      ];
+    }
+
+    function formatFloat(val) {
+      let str = val.toFixed(3);
+      str = str.replace(/\.?0+$/, '');
+      if (!str.includes('.')) str += '.0';
+      return str;
+    }
+
+    const grid = document.getElementById('color-grid');
+    colors.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'color-card';
+      card.innerHTML = `
+        <span class="color-label">${c.name}</span>
+        <div class="color-inputs">
+          <input type="text" id="text-${c.id}" value="${c.default}" maxlength="7">
+          <input type="color" id="picker-${c.id}" value="${c.default}">
+        </div>
+      `;
+      grid.appendChild(card);
+
+      const text = card.querySelector(`#text-${c.id}`);
+      const picker = card.querySelector(`#picker-${c.id}`);
+
+      picker.addEventListener('input', (e) => {
+        text.value = e.target.value.toUpperCase();
+        updateOutputs();
+      });
+
+      text.addEventListener('input', (e) => {
+        let val = e.target.value;
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+          picker.value = val;
+          updateOutputs();
+        }
+      });
+    });
+
+    function updateOutputs() {
+      const values = {};
+      colors.forEach(c => {
+        const hex = document.getElementById('picker-' + c.id).value;
+        values[c.id] = hexToRgb(hex);
+      });
+
+      // JS Output:
+      const bg = values.bg;
+      const boat = values.boat;
+      const sail = values.sail;
+
+      document.getElementById('js-output').value =
+`const BACKGROUND_COLOR = [${formatFloat(bg[0])}, ${formatFloat(bg[1])}, ${formatFloat(bg[2])}, 1];
+const BOAT_COLOR = [${formatFloat(boat[0])}, ${formatFloat(boat[1])}, ${formatFloat(boat[2])}];
+const SAIL_COLOR = [${formatFloat(sail[0])}, ${formatFloat(sail[1])}, ${formatFloat(sail[2])}];`;
+
+      // Shader Output:
+      document.getElementById('shader-output').value =
+`    vec3 blue   = vec3(${formatFloat(values.blue[0])}, ${formatFloat(values.blue[1])}, ${formatFloat(values.blue[2])});
+    vec3 yellow = vec3(${formatFloat(values.yellow[0])}, ${formatFloat(values.yellow[1])}, ${formatFloat(values.yellow[2])});
+    vec3 green  = vec3(${formatFloat(values.green[0])}, ${formatFloat(values.green[1])}, ${formatFloat(values.green[2])});
+    vec3 grey   = vec3(${formatFloat(values.grey[0])}, ${formatFloat(values.grey[1])}, ${formatFloat(values.grey[2])});
+    vec3 white  = vec3(${formatFloat(values.white[0])}, ${formatFloat(values.white[1])}, ${formatFloat(values.white[2])});`;
+    }
+
+    let toastTimer;
+    function copyText(id) {
+      const el = document.getElementById(id);
+      navigator.clipboard.writeText(el.value).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 1800);
+      });
+    }
+
+    updateOutputs();
+  </script>
+</body>
+</html>
