@@ -661,7 +661,7 @@ function loop(currentTime) {
 
   delta += camera.speed * dTime;
 
-  const easeOut = Math.pow(cycleProgress, 2.0);
+  const easeOut = cycleProgress * cycleProgress * (3 - 2*cycleProgress);
   multiplier = MIN_MULT + (MAX_MULT - MIN_MULT) * easeOut;
 
   setCameraPos(camera, delta);
