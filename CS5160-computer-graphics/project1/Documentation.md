@@ -1,5 +1,5 @@
 # Overview
-This is the documentation for my [CS5160 Computer Graphics](/CS5160-computer-graphics/) Project 1. The assignment instructed creating an interactive experience rendered via pinhole projection, with separate modes for using js canvas strokes, simulated rasteration with lines, and simulated rasteration with triangle faces. It is available to interact with at [CS5160_Project1.html](.). [Source code](https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/project1/index.html).
+This is the documentation for my [CS5160 Computer Graphics](/CS5160-computer-graphics/) Project 1. The assignment instructed creating an interactive experience rendered via pinhole projection, with separate modes for using js canvas strokes, simulated rasteration with lines, and simulated rasteration with triangle faces. It is available to interact with [here](.). [Source code](https://github.com/ReeceW18/ReeceW18.github.io/tree/main/CS5160-computer-graphics/project1/index.html).
 
 <video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/project1/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
   <source src="/CS5160-computer-graphics/project1/assets/demo.mp4" type="video/mp4">
