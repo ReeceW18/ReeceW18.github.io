@@ -23,9 +23,9 @@ See:
 
 ## Project 2 - Cube World
 
-<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/project2/assets/demo_thumbnail.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
-  <source src="/CS5160-computer-graphics/project2/assets/demo.mp4" type="video/mp4">
-</video>
+<video controls preload="metadata" playsinline poster="/CS5160-computer-graphics/project2/assets/procedural-size-500.png" width="100%" style="max-width: 800px; height: auto; background-color: #000;">
+  <source src="/CS5160-computer-graphics/project2/assets/cs5160-project2-demo.webm" type="video/webm">
+</video> 
 
 This project involved implementation of our in class topics to render using the GPU with WebGL, exploring graphics basics including: 
 - GPU shader programming pipeline 
